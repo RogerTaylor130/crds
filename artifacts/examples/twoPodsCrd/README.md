@@ -1,6 +1,10 @@
-# Description
+# Note
 
-## Usage
+## About
+
+CRD name: asun
+
+### Usage
 
 This is to create a crd that will create two pods with specific image with it.
 
