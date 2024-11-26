@@ -23,6 +23,11 @@ spec:
                   type: integer
                   minimum: 1
                   maximum: 4
+            status:
+              type: object
+              properties:
+                availableReplicas:
+                  type: integer
 
   names:
     kind: January
