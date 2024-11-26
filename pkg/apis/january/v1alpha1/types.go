@@ -32,20 +32,20 @@ type January struct {
 	//Status JanuaryStatus `json:"status"`
 }
 
-// FooSpec is the spec for a Foo resource
+// JanuarySpec is the spec for a January resource
 type JanuarySpec struct {
 	DeploymentName string `json:"deploymentName"`
 	Replicas       *int32 `json:"replicas"`
 }
 
-//// FooStatus is the status for a Foo resource
-//type FooStatus struct {
+//// JanuaryStatus is the status for a January resource
+//type JanuaryStatus struct {
 //	AvailableReplicas int32 `json:"availableReplicas"`
 //}
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
-// JanuaryList is a list of Foo resources
+// JanuaryList is a list of January resources
 type JanuaryList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata"`
