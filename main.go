@@ -20,7 +20,7 @@ func main() {
 	officalFactory := kubeinformers.NewSharedInformerFactory(officalClient, time.Second*20)
 	januaryFactory := informers.NewSharedInformerFactory(januaryClient, 0)
 
-	januaryInformer := januaryFactory.Roger().V1alpha1().Januaries()
+	barsInformer := januaryFactory.Roger().V1alpha1().Januaries()
 	deploymentInformer := officalFactory.Apps().V1().Deployments()
 	podInformer := officalFactory.Core().V1().Pods()
 
@@ -30,9 +30,9 @@ func main() {
 		},
 	})
 
-	januaryInformer.Informer().AddEventHandler(cache.ResourceEventHandlerFuncs{
+	barsInformer.Informer().AddEventHandler(cache.ResourceEventHandlerFuncs{
 		AddFunc: func(obj interface{}) {
-			log.Println("Add january:", obj)
+			log.Println("Add mycrds:", obj)
 		},
 	})
 
@@ -53,7 +53,7 @@ func main() {
 	log.Println("Pod cache synced")
 
 	log.Println("Waiting for example cache sync")
-	if ok := cache.WaitForCacheSync(ctx.Done(), januaryInformer.Informer().HasSynced); !ok {
+	if ok := cache.WaitForCacheSync(ctx.Done(), barsInformer.Informer().HasSynced); !ok {
 		log.Fatal("Failed to sync")
 	}
 	log.Println("Cache synced")

@@ -23,32 +23,32 @@ import (
 // +genclient
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
-// January is a specification for a January resource
-type January struct {
+// Bar is a specification for a Bar resource
+type Bar struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
-	Spec JanuarySpec `json:"spec"`
-	//Status JanuaryStatus `json:"status"`
+	Spec   BarSpec   `json:"spec"`
+	Status BarStatus `json:"status"`
 }
 
-// JanuarySpec is the spec for a January resource
-type JanuarySpec struct {
+// BarSpec is the spec for a Bar resource
+type BarSpec struct {
 	DeploymentName string `json:"deploymentName"`
 	Replicas       *int32 `json:"replicas"`
 }
 
-// JanuaryStatus is the status for a January resource
-type JanuaryStatus struct {
+// BarStatus is the status for a Bar resource
+type BarStatus struct {
 	AvailableReplicas int32 `json:"availableReplicas"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
-// JanuaryList is a list of January resources
-type JanuaryList struct {
+// BarList is a list of Bar resources
+type BarList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata"`
 
-	Items []January `json:"items"`
+	Items []Bar `json:"items"`
 }

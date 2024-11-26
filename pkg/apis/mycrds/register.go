@@ -14,8 +14,9 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-// +k8s:deepcopy-gen=package
-// +groupName=roger.alpha.example.com
+package mycrds
 
-// Package v1alpha1 is the v1alpha1 version of the API.
-package v1alpha1 // import "crds/pkg/apis/january/v1alpha1"
+// GroupName is the group name used in this package
+const (
+	GroupName = "roger.alpha.example.com"
+)
