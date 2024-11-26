@@ -18,4 +18,4 @@ limitations under the License.
 // +groupName=roger.alpha.example.com
 
 // Package v1alpha is the v1alpha version of the API.
-package v1alpha // import "k8s.io/sample-controller/pkg/apis/samplecontroller/v1alpha"
+package v1alpha // import "crds/pkg/apis/january/v1alpha"
