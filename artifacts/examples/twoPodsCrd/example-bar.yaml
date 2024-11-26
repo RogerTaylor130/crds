@@ -1,0 +1,7 @@
+apiVersion: roger.alpha.example.com/v1alpha1
+kind: Bar
+metadata:
+  name: example-bar
+spec:
+  deploymentName: example-bar
+  replicas: 2
