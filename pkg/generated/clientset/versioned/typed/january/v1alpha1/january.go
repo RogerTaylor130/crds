@@ -20,7 +20,7 @@ package v1alpha1
 
 import (
 	"context"
-	v1alpha1 "crds/pkg/apis/january/v1alpha"
+	v1alpha1 "crds/pkg/apis/january/v1alpha1"
 	scheme "crds/pkg/generated/clientset/versioned/scheme"
 
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"

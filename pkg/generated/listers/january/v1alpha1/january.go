@@ -19,7 +19,7 @@ limitations under the License.
 package v1alpha1
 
 import (
-	v1alpha1 "crds/pkg/apis/january/v1alpha"
+	v1alpha1 "crds/pkg/apis/january/v1alpha1"
 
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/client-go/listers"

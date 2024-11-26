@@ -19,7 +19,7 @@ limitations under the License.
 package fake
 
 import (
-	rogerv1alpha1 "crds/pkg/apis/january/v1alpha"
+	rogerv1alpha1 "crds/pkg/apis/january/v1alpha1"
 
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"

@@ -20,7 +20,7 @@ package v1alpha1
 
 import (
 	"context"
-	januaryv1alpha1 "crds/pkg/apis/january/v1alpha"
+	januaryv1alpha1 "crds/pkg/apis/january/v1alpha1"
 	versioned "crds/pkg/generated/clientset/versioned"
 	internalinterfaces "crds/pkg/generated/informers/externalversions/internalinterfaces"
 	v1alpha1 "crds/pkg/generated/listers/january/v1alpha1"
