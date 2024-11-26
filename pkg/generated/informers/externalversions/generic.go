@@ -19,7 +19,7 @@ limitations under the License.
 package externalversions
 
 import (
-	v1alpha1 "crds/pkg/apis/january/v1alpha1"
+	v1alpha1 "crds/pkg/apis/january/v1alpha"
 	"fmt"
 
 	schema "k8s.io/apimachinery/pkg/runtime/schema"
@@ -52,7 +52,7 @@ func (f *genericInformer) Lister() cache.GenericLister {
 // TODO extend this to unknown resources with a client pool
 func (f *sharedInformerFactory) ForResource(resource schema.GroupVersionResource) (GenericInformer, error) {
 	switch resource {
-	// Group=roger.alpha.example.com, Version=v1alpha1
+	// Group=roger.alpha.example.com, Version=v1alpha
 	case v1alpha1.SchemeGroupVersion.WithResource("januaries"):
 		return &genericInformer{resource: resource.GroupResource(), informer: f.Roger().V1alpha1().Januaries().Informer()}, nil
 

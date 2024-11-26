@@ -17,5 +17,5 @@ limitations under the License.
 // +k8s:deepcopy-gen=package
 // +groupName=roger.alpha.example.com
 
-// Package v1alpha1 is the v1alpha1 version of the API.
-package v1alpha1 // import "k8s.io/sample-controller/pkg/apis/samplecontroller/v1alpha1"
+// Package v1alpha is the v1alpha version of the API.
+package v1alpha // import "k8s.io/sample-controller/pkg/apis/samplecontroller/v1alpha"
