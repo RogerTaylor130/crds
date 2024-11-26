@@ -15,12 +15,12 @@ func main() {
 
 	ctx := clientTools.SetupSignalHandler()
 
-	januaryClient := clientTools.GetExampleClientSet()
+	barClient := clientTools.GetExampleClientSet()
 
 	officalFactory := kubeinformers.NewSharedInformerFactory(officalClient, time.Second*20)
-	januaryFactory := informers.NewSharedInformerFactory(januaryClient, 0)
+	barFactory := informers.NewSharedInformerFactory(barClient, 0)
 
-	barsInformer := januaryFactory.Roger().V1alpha1().Januaries()
+	barsInformer := barFactory.Roger().V1alpha1().Bars()
 	deploymentInformer := officalFactory.Apps().V1().Deployments()
 	podInformer := officalFactory.Core().V1().Pods()
 
@@ -44,18 +44,20 @@ func main() {
 
 	log.Println("Starting Informers")
 	officalFactory.Start(ctx.Done())
-	januaryFactory.Start(ctx.Done())
+	barFactory.Start(ctx.Done())
 
-	log.Println("Waiting for pod cache sync")
-	if ok := cache.WaitForCacheSync(ctx.Done(), podInformer.Informer().HasSynced); !ok {
-		log.Fatal("Failed to wait for pod cache")
+	log.Println("Waiting for pod&deployment cache sync")
+	if ok := cache.WaitForCacheSync(ctx.Done(), podInformer.Informer().HasSynced, deploymentInformer.Informer().HasSynced); !ok {
+		log.Fatal("Failed to wait for pod or deploymentcache")
 	}
-	log.Println("Pod cache synced")
+	log.Println("Pod & deployment cache synced")
 
 	log.Println("Waiting for example cache sync")
 	if ok := cache.WaitForCacheSync(ctx.Done(), barsInformer.Informer().HasSynced); !ok {
 		log.Fatal("Failed to sync")
 	}
 	log.Println("Cache synced")
+
+	<-time.After(time.Minute * 5)
 
 }
