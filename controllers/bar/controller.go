@@ -143,10 +143,12 @@ func (c BarController) processNextWorkItem(ctx context.Context) bool {
 	defer c.workqueue.Done(objRef)
 
 	err := c.syncHandler(ctx, objRef)
-	if err != nil {
+	if err == nil {
 		c.workqueue.Forget(objRef)
 		logger.Info("Successfully synced", "objectName", objRef)
 		return true
+	} else {
+		logger.Info("ERROR: ", "e: ", err, "objRef", objRef)
 	}
 
 	utilruntime.HandleError(err)
@@ -176,22 +178,23 @@ func (c BarController) syncHandler(ctx context.Context, objectRef cache.ObjectNa
 	deployment, err := c.deploymentInformer.Lister().Deployments(bar.Namespace).Get(deploymentName)
 	if errors.IsNotFound(err) {
 		logger.Info("Can not find the deployment, Creating it")
-		//deployment, err = c.kubeInterface.AppsV1().Deployments(bar.Namespace).Create(ctx, newDeployment(bar), metav1.CreateOptions{FieldManager: FieldManager})
+		deployment, err = c.kubeInterface.AppsV1().Deployments(bar.Namespace).Create(ctx, newDeployment(bar), metav1.CreateOptions{FieldManager: FieldManager})
 	}
 
 	if err != nil {
 		return err
 	}
 
-	if !metav1.IsControlledBy(bar, deployment) {
+	if !metav1.IsControlledBy(deployment, bar) {
 		msg := fmt.Sprintf(MessageResourceExists, deployment.Name)
+		logger.Info("1", "msg: ", msg)
 		//c.recorder.Event(foo, corev1.EventTypeWarning, ErrResourceExists, msg)
 		return fmt.Errorf("%s", msg)
 	}
 
 	if bar.Spec.Replicas != nil && *bar.Spec.Replicas != *deployment.Spec.Replicas {
 		logger.V(4).Info("Update deployment resource", "currentReplicas", *bar.Spec.Replicas, "desiredReplicas", *deployment.Spec.Replicas)
-		//deployment, err = c.kubeInterface.AppsV1().Deployments(bar.Namespace).Update(ctx, newDeployment(bar), metav1.UpdateOptions{FieldManager: FieldManager})
+		deployment, err = c.kubeInterface.AppsV1().Deployments(bar.Namespace).Update(ctx, newDeployment(bar), metav1.UpdateOptions{FieldManager: FieldManager})
 	}
 
 	if err != nil {
@@ -226,8 +229,9 @@ func newDeployment(bar *barv1alpha1.Bar) *appsv1.Deployment {
 				Spec: corev1.PodSpec{
 					Containers: []corev1.Container{
 						{
-							Name:  "nginx",
-							Image: "nginx:latest",
+							Name:            "nginx",
+							Image:           "nginx",
+							ImagePullPolicy: "Never",
 						},
 					},
 				},
