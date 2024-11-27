@@ -64,9 +64,11 @@ func NewBarController(
 	)
 
 	controller := &BarController{
-		kubeInterface: kubeInterface,
-		barInterface:  barInterface,
-		workqueue:     workqueue.NewTypedRateLimitingQueue(ratelimiter),
+		kubeInterface:      kubeInterface,
+		barInterface:       barInterface,
+		barInformer:        barInformer,
+		deploymentInformer: deploymentInformer,
+		workqueue:          workqueue.NewTypedRateLimitingQueue(ratelimiter),
 	}
 
 	//barsInformer := barFactory.Roger().V1alpha1().Bars()
@@ -101,9 +103,9 @@ func NewBarController(
 
 func (c BarController) Run(ctx context.Context, worker int) {
 
-	log.Println("Waiting for pod&deployment cache sync")
+	log.Println("Waiting for deployment cache sync")
 	if ok := cache.WaitForCacheSync(ctx.Done(), c.deploymentInformer.Informer().HasSynced); !ok {
-		log.Fatal("Failed to wait for pod or deploymentcache")
+		log.Fatal("Failed to wait for deployment to be cached")
 	}
 	log.Println("Pod & deployment cache synced")
 
