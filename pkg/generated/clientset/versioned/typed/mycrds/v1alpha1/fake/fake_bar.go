@@ -29,7 +29,7 @@ import (
 	testing "k8s.io/client-go/testing"
 )
 
-// FakeBars implements BarInterface
+// FakeBars implements barInterface
 type FakeBars struct {
 	Fake *FakeRogerV1alpha1
 	ns   string
