@@ -18,7 +18,6 @@ import (
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/util/workqueue"
 	"k8s.io/klog/v2"
-	"log"
 	"time"
 )
 
@@ -101,23 +100,30 @@ func NewBarController(
 
 }
 
-func (c BarController) Run(ctx context.Context, worker int) {
+func (c BarController) Run(ctx context.Context, worker int) error {
 
-	log.Println("Waiting for deployment cache sync")
+	logger := klog.FromContext(ctx)
+	logger.Info("Waiting for deployment cache sync")
 	if ok := cache.WaitForCacheSync(ctx.Done(), c.deploymentInformer.Informer().HasSynced); !ok {
-		log.Fatal("Failed to wait for deployment to be cached")
+		return fmt.Errorf("Failed to wait for deployment to be cached")
 	}
-	log.Println("Pod & deployment cache synced")
+	logger.Info("Pod & deployment cache synced")
 
-	log.Println("Waiting for example cache sync")
+	logger.Info("Waiting for example cache sync")
 	if ok := cache.WaitForCacheSync(ctx.Done(), c.barInformer.Informer().HasSynced); !ok {
-		log.Fatal("Failed to sync")
+		return fmt.Errorf("Failed to sync")
 	}
-	log.Println("Cache synced")
+	logger.Info("Cache synced")
 
 	for i := 0; i < worker; i++ {
 		go wait.UntilWithContext(ctx, c.runWorker, time.Second)
 	}
+
+	logger.Info("Started workers")
+	<-ctx.Done()
+	logger.Info("Shutting down workers")
+
+	return nil
 }
 
 func (c BarController) runWorker(ctx context.Context) {

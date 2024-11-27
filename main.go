@@ -5,6 +5,7 @@ import (
 	informers "crds/pkg/generated/informers/externalversions"
 	clientTools "crds/tools/client"
 	kubeinformers "k8s.io/client-go/informers"
+	"k8s.io/klog/v2"
 	"log"
 	"time"
 )
@@ -14,6 +15,7 @@ func main() {
 	officalClient := clientTools.GetOfficialClientSet()
 
 	ctx := clientTools.SetupSignalHandler()
+	logger := klog.FromContext(ctx)
 
 	barClient := clientTools.GetExampleClientSet()
 
@@ -29,5 +31,8 @@ func main() {
 	officalFactory.Start(ctx.Done())
 	barFactory.Start(ctx.Done())
 
-	controller.Run(ctx, 1)
+	if err := controller.Run(ctx, 1); err != nil {
+		logger.Error(err, "Error running controller")
+		klog.FlushAndExit(klog.ExitFlushTimeout, 1)
+	}
 }
