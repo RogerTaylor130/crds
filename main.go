@@ -23,11 +23,11 @@ func main() {
 	barInformer := barFactory.Roger().V1alpha1().Bars()
 	deploymentInformer := officalFactory.Apps().V1().Deployments()
 
+	controller := bar.NewBarController(ctx, officalClient, barClient, barInformer, deploymentInformer)
+
 	log.Println("Starting Informers")
 	officalFactory.Start(ctx.Done())
 	barFactory.Start(ctx.Done())
-
-	controller := bar.NewBarController(ctx, officalClient, barClient, barInformer, deploymentInformer)
 
 	controller.Run(ctx, 1)
 }
