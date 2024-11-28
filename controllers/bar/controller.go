@@ -193,7 +193,7 @@ func (c BarController) syncHandler(ctx context.Context, objectRef cache.ObjectNa
 	}
 
 	if bar.Spec.Replicas != nil && *bar.Spec.Replicas != *deployment.Spec.Replicas {
-		logger.V(4).Info("Update deployment resource", "currentReplicas", *bar.Spec.Replicas, "desiredReplicas", *deployment.Spec.Replicas)
+		logger.V(4).Info("Update deployment resource", "currentReplicas", *deployment.Spec.Replicas, "desiredReplicas", *bar.Spec.Replicas)
 		deployment, err = c.kubeInterface.AppsV1().Deployments(bar.Namespace).Update(ctx, newDeployment(bar), metav1.UpdateOptions{FieldManager: FieldManager})
 	}
 
