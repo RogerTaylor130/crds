@@ -91,9 +91,11 @@ func NewBarController(
 	})
 
 	deploymentInformer.Informer().AddEventHandler(cache.ResourceEventHandlerFuncs{
-		AddFunc: func(obj interface{}) {
-			//log.Println("Add deployment:")
+		AddFunc: controller.handleObject,
+		UpdateFunc: func(old, new interface{}) {
+			controller.handleObject(new)
 		},
+		DeleteFunc: controller.handleObject,
 	})
 
 	return controller
@@ -105,13 +107,13 @@ func (c BarController) Run(ctx context.Context, worker int) error {
 	logger := klog.FromContext(ctx)
 	logger.Info("Waiting for deployment cache sync")
 	if ok := cache.WaitForCacheSync(ctx.Done(), c.deploymentInformer.Informer().HasSynced); !ok {
-		return fmt.Errorf("Failed to wait for deployment to be cached")
+		return fmt.Errorf("failed to wait for deployment to be cached")
 	}
 	logger.Info("Pod & deployment cache synced")
 
 	logger.Info("Waiting for example cache sync")
 	if ok := cache.WaitForCacheSync(ctx.Done(), c.barInformer.Informer().HasSynced); !ok {
-		return fmt.Errorf("Failed to sync")
+		return fmt.Errorf("failed to sync")
 	}
 	logger.Info("Cache synced")
 
@@ -246,4 +248,49 @@ func (c BarController) enqueue(obj interface{}) {
 	} else {
 		c.workqueue.Add(objRef)
 	}
+}
+
+// 1.1: if obj, go to 2.1. if not go to 1.2
+// 1.2:
+// 1.3:
+// 2.1: log processing, Get ownerRef. Check if ownerRef's kind = Bar(ur crd kind). Return if not
+// 2.2: Get bar(the owner) and put it in the queue
+func (c BarController) handleObject(obj interface{}) {
+	var object metav1.Object
+	var ok bool
+	logger := klog.FromContext(context.Background())
+	// TODO. I dont know what this !ok means and the logic instead
+	if object, ok = obj.(*metav1.ObjectMeta); !ok {
+		tombstone, ok := obj.(cache.DeletedFinalStateUnknown)
+		if !ok {
+			// If the object value is not too big and does not contain sensitive information then
+			// it may be useful to include it.
+			utilruntime.HandleErrorWithContext(context.Background(), nil, "Error decoding object, invalid type", "type", fmt.Sprintf("%T", obj))
+			return
+		}
+		object, ok = tombstone.Obj.(metav1.Object)
+		if !ok {
+			// If the object value is not too big and does not contain sensitive information then
+			// it may be useful to include it.
+			utilruntime.HandleErrorWithContext(context.Background(), nil, "Error decoding object tombstone, invalid type", "type", fmt.Sprintf("%T", tombstone.Obj))
+			return
+		}
+		logger.V(4).Info("Recovered deleted object", "resourceName", object.GetName())
+	}
+	logger.V(4).Info("Processing object", "object", klog.KObj(object))
+
+	if ownerRef := metav1.GetControllerOf(object); ownerRef != nil {
+		if ownerRef.Kind != "Bar" {
+			return
+		}
+
+		bar, err := c.barInformer.Lister().Bars(object.GetNamespace()).Get(ownerRef.Name)
+		if err != nil {
+			logger.V(4).Info("Ignore orphaned object", "object", klog.KObj(object), "foo", ownerRef.Name)
+			return
+		}
+		c.enqueue(bar)
+		return
+	}
+
 }
