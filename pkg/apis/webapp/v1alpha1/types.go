@@ -23,32 +23,58 @@ import (
 // +genclient
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
-// Bar is a specification for a Bar resource
-type Bar struct {
+// Webapp is a specification for a Webapp resource
+type Webapp struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
-	Spec   BarSpec   `json:"spec"`
-	Status BarStatus `json:"status"`
+	Spec   WebappSpec   `json:"spec"`
+	Status WebappStatus `json:"status"`
 }
 
-// BarSpec is the spec for a Bar resource
-type BarSpec struct {
-	DeploymentName string `json:"deploymentName"`
-	Replicas       *int32 `json:"replicas"`
+// WebappSpec is the spec for a Webapp resource
+type WebappSpec struct {
+	Version          string `json:"VersionName"`
+	Branch           string `json:"BranchName"`
+	Env              string `json:"EnvName"`
+	ProducerReplicas *int32 `json:"ProducerReplicas"`
+	ConsumerReplicas *int32 `json:"ConsumerReplicas"`
 }
 
-// BarStatus is the status for a Bar resource
-type BarStatus struct {
-	AvailableReplicas int32 `json:"availableReplicas"`
+// WebappStatus is the status for a Webapp resource
+type WebappStatus struct {
+	Consumer consumer `json:"Consumer"`
+	Producer producer `json:"Producer"`
+	Filebeat filebeat `json:"filebeat"`
+}
+
+type consumer struct {
+	Replicas            *int32 `json:"ConsumerReplicas"`
+	AvailableReplicas   *int32 `json:"AvailableReplicas"`
+	UnavailableReplicas *int32 `json:"UnavailableReplicas"`
+	ObservedGeneration  *int32 `json:"ObservedGeneration"`
+}
+
+type producer struct {
+	Replicas            *int32 `json:"ConsumerReplicas"`
+	AvailableReplicas   *int32 `json:"AvailableReplicas"`
+	UnavailableReplicas *int32 `json:"UnavailableReplicas"`
+	ObservedGeneration  *int32 `json:"ObservedGeneration"`
+}
+
+type filebeat struct {
+	Replicas            *int32 `json:"ConsumerReplicas"`
+	AvailableReplicas   *int32 `json:"AvailableReplicas"`
+	UnavailableReplicas *int32 `json:"UnavailableReplicas"`
+	ObservedGeneration  *int32 `json:"ObservedGeneration"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
-// BarList is a list of Bar resources
-type BarList struct {
+// WebappList is a Webapp of Webapp resources
+type WebappList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata"`
 
-	Items []Bar `json:"items"`
+	Items []Webapp `json:"items"`
 }
