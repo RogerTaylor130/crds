@@ -23,14 +23,14 @@ spec:
                   type: string
                 env:
                   type: string
-                producerReplicaCount:
+                producerReplicas:
                   type: integer
-                consumerReplicaCount:
+                consumerReplicas:
                   type: integer
             status:
               type: object
               properties:
-                consumerReplicas:
+                consumer:
                   type: object
                   properties:
                     availableReplicas:
@@ -41,7 +41,7 @@ spec:
                       type: integer
                     observedGeneration:
                       type: integer
-                producerReplicas:
+                producer:
                   type: object
                   properties:
                     availableReplicas:
@@ -52,7 +52,7 @@ spec:
                       type: integer
                     observedGeneration:
                       type: integer
-                filebeatReplicas:
+                filebeat:
                   type: object
                   properties:
                     availableReplicas:
