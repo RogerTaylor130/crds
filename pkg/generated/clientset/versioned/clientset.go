@@ -20,6 +20,7 @@ package versioned
 
 import (
 	rogerv1alpha1 "crds/pkg/generated/clientset/versioned/typed/mycrds/v1alpha1"
+	webappv1alpha1 "crds/pkg/generated/clientset/versioned/typed/webapp/v1alpha1"
 	"fmt"
 	"net/http"
 
@@ -31,17 +32,24 @@ import (
 type Interface interface {
 	Discovery() discovery.DiscoveryInterface
 	RogerV1alpha1() rogerv1alpha1.RogerV1alpha1Interface
+	WebappV1alpha1() webappv1alpha1.WebappV1alpha1Interface
 }
 
 // Clientset contains the clients for groups.
 type Clientset struct {
 	*discovery.DiscoveryClient
-	rogerV1alpha1 *rogerv1alpha1.RogerV1alpha1Client
+	rogerV1alpha1  *rogerv1alpha1.RogerV1alpha1Client
+	webappV1alpha1 *webappv1alpha1.WebappV1alpha1Client
 }
 
 // RogerV1alpha1 retrieves the RogerV1alpha1Client
 func (c *Clientset) RogerV1alpha1() rogerv1alpha1.RogerV1alpha1Interface {
 	return c.rogerV1alpha1
+}
+
+// WebappV1alpha1 retrieves the WebappV1alpha1Client
+func (c *Clientset) WebappV1alpha1() webappv1alpha1.WebappV1alpha1Interface {
+	return c.webappV1alpha1
 }
 
 // Discovery retrieves the DiscoveryClient
@@ -92,6 +100,10 @@ func NewForConfigAndClient(c *rest.Config, httpClient *http.Client) (*Clientset,
 	if err != nil {
 		return nil, err
 	}
+	cs.webappV1alpha1, err = webappv1alpha1.NewForConfigAndClient(&configShallowCopy, httpClient)
+	if err != nil {
+		return nil, err
+	}
 
 	cs.DiscoveryClient, err = discovery.NewDiscoveryClientForConfigAndClient(&configShallowCopy, httpClient)
 	if err != nil {
@@ -114,6 +126,7 @@ func NewForConfigOrDie(c *rest.Config) *Clientset {
 func New(c rest.Interface) *Clientset {
 	var cs Clientset
 	cs.rogerV1alpha1 = rogerv1alpha1.New(c)
+	cs.webappV1alpha1 = webappv1alpha1.New(c)
 
 	cs.DiscoveryClient = discovery.NewDiscoveryClient(c)
 	return &cs

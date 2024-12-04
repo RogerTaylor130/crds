@@ -22,6 +22,7 @@ import (
 	versioned "crds/pkg/generated/clientset/versioned"
 	internalinterfaces "crds/pkg/generated/informers/externalversions/internalinterfaces"
 	mycrds "crds/pkg/generated/informers/externalversions/mycrds"
+	webapp "crds/pkg/generated/informers/externalversions/webapp"
 	reflect "reflect"
 	sync "sync"
 	time "time"
@@ -255,8 +256,13 @@ type SharedInformerFactory interface {
 	InformerFor(obj runtime.Object, newFunc internalinterfaces.NewInformerFunc) cache.SharedIndexInformer
 
 	Roger() mycrds.Interface
+	Webapp() webapp.Interface
 }
 
 func (f *sharedInformerFactory) Roger() mycrds.Interface {
 	return mycrds.New(f, f.namespace, f.tweakListOptions)
+}
+
+func (f *sharedInformerFactory) Webapp() webapp.Interface {
+	return webapp.New(f, f.namespace, f.tweakListOptions)
 }
