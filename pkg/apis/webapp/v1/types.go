@@ -14,12 +14,11 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package v1alpha1
+package v1
 
 import metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 // +genclient
-// +genclient:method=GetClusterTestType,verb=get
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
 // TestType is a top-level type. A client is created for it.
@@ -54,8 +53,7 @@ type ClusterTestTypeList struct {
 	metav1.TypeMeta `json:",inline"`
 	// +optional
 	metav1.ListMeta `json:"metadata,omitempty"`
-
-	Items []ClusterTestType `json:"items"`
+	Items           []ClusterTestType `json:"items"`
 }
 
 // +genclient
