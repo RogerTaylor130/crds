@@ -1,5 +1,5 @@
 /*
-Copyright 2017 The Kubernetes Authors.
+Copyright 2015 The Kubernetes Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -16,66 +16,62 @@ limitations under the License.
 
 package v1alpha1
 
-import (
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-)
+import metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 // +genclient
 // +genclient:method=GetClusterTestType,verb=get
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
-// Webapp is a specification for a Webapp resource
-type Webapp struct {
-	metav1.TypeMeta   `json:",inline"`
+// TestType is a top-level type. A client is created for it.
+type TestType struct {
+	metav1.TypeMeta `json:",inline"`
+	// +optional
 	metav1.ObjectMeta `json:"metadata,omitempty"`
-
-	Spec   WebappSpec   `json:"spec"`
-	Status WebappStatus `json:"status"`
-}
-
-// WebappSpec is the spec for a Webapp resource
-type WebappSpec struct {
-	Version          string `json:"VersionName"`
-	Branch           string `json:"BranchName"`
-	Env              string `json:"EnvName"`
-	ProducerReplicas *int32 `json:"ProducerReplicas"`
-	ConsumerReplicas *int32 `json:"ConsumerReplicas"`
-}
-
-// WebappStatus is the status for a Webapp resource
-type WebappStatus struct {
-	Consumer consumer `json:"Consumer"`
-	Producer producer `json:"Producer"`
-	Filebeat filebeat `json:"filebeat"`
-}
-
-type consumer struct {
-	Replicas            *int32 `json:"ConsumerReplicas"`
-	AvailableReplicas   *int32 `json:"AvailableReplicas"`
-	UnavailableReplicas *int32 `json:"UnavailableReplicas"`
-	ObservedGeneration  *int32 `json:"ObservedGeneration"`
-}
-
-type producer struct {
-	Replicas            *int32 `json:"ConsumerReplicas"`
-	AvailableReplicas   *int32 `json:"AvailableReplicas"`
-	UnavailableReplicas *int32 `json:"UnavailableReplicas"`
-	ObservedGeneration  *int32 `json:"ObservedGeneration"`
-}
-
-type filebeat struct {
-	Replicas            *int32 `json:"ConsumerReplicas"`
-	AvailableReplicas   *int32 `json:"AvailableReplicas"`
-	UnavailableReplicas *int32 `json:"UnavailableReplicas"`
-	ObservedGeneration  *int32 `json:"ObservedGeneration"`
+	// +optional
+	Status TestTypeStatus `json:"status,omitempty"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
-// WebappList is a Webapp of Webapp resources
-type WebappList struct {
+// TestTypeList is a top-level list type. The client methods for lists are automatically created.
+// You are not supposed to create a separated client for this one.
+type TestTypeList struct {
 	metav1.TypeMeta `json:",inline"`
-	metav1.ListMeta `json:"metadata"`
+	// +optional
+	metav1.ListMeta `json:"metadata,omitempty"`
 
-	Items []Webapp `json:"items"`
+	Items []TestType `json:"items"`
+}
+
+type TestTypeStatus struct {
+	Blah string `json:"blah"`
+}
+
+// +genclient:nonNamespaced
+// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+
+type ClusterTestTypeList struct {
+	metav1.TypeMeta `json:",inline"`
+	// +optional
+	metav1.ListMeta `json:"metadata,omitempty"`
+
+	Items []ClusterTestType `json:"items"`
+}
+
+// +genclient
+// +genclient:nonNamespaced
+// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+// +genclient:method=GetScale,verb=get,subresource=scale,result=k8s.io/api/autoscaling/v1.Scale
+// +genclient:method=UpdateScale,verb=update,subresource=scale,input=k8s.io/api/autoscaling/v1.Scale,result=k8s.io/api/autoscaling/v1.Scale
+
+type ClusterTestType struct {
+	metav1.TypeMeta `json:",inline"`
+	// +optional
+	metav1.ObjectMeta `json:"metadata,omitempty"`
+	// +optional
+	Status ClusterTestTypeStatus `json:"status,omitempty"`
+}
+
+type ClusterTestTypeStatus struct {
+	Blah string `json:"blah"`
 }
