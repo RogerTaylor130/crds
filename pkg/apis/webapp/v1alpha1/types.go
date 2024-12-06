@@ -21,6 +21,7 @@ import (
 )
 
 // +genclient
+// +genclient:method=GetClusterTestType,verb=get
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
 // Webapp is a specification for a Webapp resource
