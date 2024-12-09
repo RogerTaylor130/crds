@@ -51,7 +51,7 @@ done < <(
       | LC_ALL=C sort -u
 )
 
-echo "${objs}"
+echo "${objs[@]:-No objects found}"
 
 #kube::codegen::gen_helpers \
 #    --boilerplate "${SCRIPT_ROOT}/hack/boilerplate.go.txt" \
