@@ -40,10 +40,19 @@ THIS_PKG_PRE="crds"
 objs=()
 while read -r dir; do
     pkg="$(echo ${dir} | awk -F '/' '{print $(NF-1)"/"$NF}' )"
-    objs+=("${pkg}")
+    kube::codegen::gen_helpers \
+        --boilerplate "${SCRIPT_ROOT}/hack/boilerplate.go.txt" \
+        "${SCRIPT_ROOT}/pkg/apis"
+
+    kube::codegen::gen_client \
+        --with-watch \
+        --output-dir "${SCRIPT_ROOT}/pkg/generated" \
+        --output-pkg "${THIS_PKG}/${pkg}/pkg/generated" \
+        --boilerplate "${SCRIPT_ROOT}/hack/boilerplate.go.txt" \
+        "${SCRIPT_ROOT}/pkg/apis"
 done < <(
     ( kube::codegen::internal::grep -l --null \
-        -e '^\s*//\s*+k8s:defaulter-gen=' \
+        -e '^\s*//\s*+k8s:deepcopy-gen=' \
         -r "${SCRIPT_ROOT}/pkg/apis" \
         --include '*.go' \
         || true \
@@ -53,13 +62,4 @@ done < <(
 
 echo "${objs[@]:-No objects found}"
 
-#kube::codegen::gen_helpers \
-#    --boilerplate "${SCRIPT_ROOT}/hack/boilerplate.go.txt" \
-#    "${SCRIPT_ROOT}/pkg/apis"
-#
-#kube::codegen::gen_client \
-#    --with-watch \
-#    --output-dir "${SCRIPT_ROOT}/pkg/generated" \
-#    --output-pkg "${THIS_PKG}/pkg/generated" \
-#    --boilerplate "${SCRIPT_ROOT}/hack/boilerplate.go.txt" \
-#    "${SCRIPT_ROOT}/pkg/apis"
+
