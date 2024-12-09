@@ -35,11 +35,11 @@ CODEGEN_PKG=${CODEGEN_PKG:-$(cd "${SCRIPT_ROOT}"; ls -d -1 ./vendor/k8s.io/code-
 echo $CODEGEN_PKG
 source "${CODEGEN_PKG}/kube_codegen.sh"
 
-THIS_PKG="crds"
+THIS_PKG_PRE="crds"
 
 local objs=()
   while read -r dir; do
-      pkg="$(cd "${dir}" && GO111MODULE=on go list -find .)"
+      pkg="$(echo ${dir} | awk -F '/' '{print $(NF-1)"/"$NF}' )"
       objs+=("${pkg}")
   done < <(
       ( kube::codegen::internal::grep -l --null \
@@ -52,6 +52,7 @@ local objs=()
   )
 
 echo "${objs}"
+
 #kube::codegen::gen_helpers \
 #    --boilerplate "${SCRIPT_ROOT}/hack/boilerplate.go.txt" \
 #    "${SCRIPT_ROOT}/pkg/apis"
