@@ -21,55 +21,32 @@ import metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 // +genclient
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
-// TestType is a top-level type. A client is created for it.
-type TestType struct {
-	metav1.TypeMeta `json:",inline"`
-	// +optional
+// Foo is a specification for a Foo resource
+type Foo struct {
+	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
-	// +optional
-	Status TestTypeStatus `json:"status,omitempty"`
+
+	Spec   FooSpec   `json:"spec"`
+	Status FooStatus `json:"status"`
+}
+
+// FooSpec is the spec for a Foo resource
+type FooSpec struct {
+	DeploymentName string `json:"deploymentName"`
+	Replicas       *int32 `json:"replicas"`
+}
+
+// FooStatus is the status for a Foo resource
+type FooStatus struct {
+	AvailableReplicas int32 `json:"availableReplicas"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
-// TestTypeList is a top-level list type. The client methods for lists are automatically created.
-// You are not supposed to create a separated client for this one.
-type TestTypeList struct {
+// FooList is a list of Foo resources
+type FooList struct {
 	metav1.TypeMeta `json:",inline"`
-	// +optional
-	metav1.ListMeta `json:"metadata,omitempty"`
+	metav1.ListMeta `json:"metadata"`
 
-	Items []TestType `json:"items"`
-}
-
-type TestTypeStatus struct {
-	Blah string `json:"blah"`
-}
-
-// +genclient:nonNamespaced
-// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
-
-type ClusterTestTypeList struct {
-	metav1.TypeMeta `json:",inline"`
-	// +optional
-	metav1.ListMeta `json:"metadata,omitempty"`
-	Items           []ClusterTestType `json:"items"`
-}
-
-// +genclient
-// +genclient:nonNamespaced
-// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
-// +genclient:method=GetScale,verb=get,subresource=scale,result=k8s.io/api/autoscaling/v1.Scale
-// +genclient:method=UpdateScale,verb=update,subresource=scale,input=k8s.io/api/autoscaling/v1.Scale,result=k8s.io/api/autoscaling/v1.Scale
-
-type ClusterTestType struct {
-	metav1.TypeMeta `json:",inline"`
-	// +optional
-	metav1.ObjectMeta `json:"metadata,omitempty"`
-	// +optional
-	Status ClusterTestTypeStatus `json:"status,omitempty"`
-}
-
-type ClusterTestTypeStatus struct {
-	Blah string `json:"blah"`
+	Items []Foo `json:"items"`
 }
