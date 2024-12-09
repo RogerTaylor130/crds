@@ -43,26 +43,26 @@ type WebappSpec struct {
 
 // WebappStatus is the status for a Webapp resource
 type WebappStatus struct {
-	Consumer consumer `json:"Consumer"`
-	Producer producer `json:"Producer"`
-	Filebeat filebeat `json:"filebeat"`
+	Consumer Consumer `json:"Consumer"`
+	Producer Producer `json:"Producer"`
+	Filebeat Filebeat `json:"Filebeat"`
 }
 
-type consumer struct {
+type Consumer struct {
 	Replicas            *int32 `json:"ConsumerReplicas"`
 	AvailableReplicas   *int32 `json:"AvailableReplicas"`
 	UnavailableReplicas *int32 `json:"UnavailableReplicas"`
 	ObservedGeneration  *int32 `json:"ObservedGeneration"`
 }
 
-type producer struct {
+type Producer struct {
 	Replicas            *int32 `json:"ConsumerReplicas"`
 	AvailableReplicas   *int32 `json:"AvailableReplicas"`
 	UnavailableReplicas *int32 `json:"UnavailableReplicas"`
 	ObservedGeneration  *int32 `json:"ObservedGeneration"`
 }
 
-type filebeat struct {
+type Filebeat struct {
 	Replicas            *int32 `json:"ConsumerReplicas"`
 	AvailableReplicas   *int32 `json:"AvailableReplicas"`
 	UnavailableReplicas *int32 `json:"UnavailableReplicas"`
