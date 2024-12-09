@@ -18,6 +18,17 @@ set -o errexit
 set -o nounset
 set -o pipefail
 
+
+function kube::codegen::internal::grep() {
+    # We use `grep` rather than `git grep` because sometimes external projects
+    # use this across repos.
+    grep "$@" \
+        --exclude-dir .git \
+        --exclude-dir _output \
+        --exclude-dir vendor
+}
+
+
 SCRIPT_ROOT=$(dirname "${BASH_SOURCE[0]}")/..
 echo $SCRIPT_ROOT
 CODEGEN_PKG=${CODEGEN_PKG:-$(cd "${SCRIPT_ROOT}"; ls -d -1 ./vendor/k8s.io/code-generator 2>/dev/null || echo ../code-generator)}
@@ -26,13 +37,28 @@ source "${CODEGEN_PKG}/kube_codegen.sh"
 
 THIS_PKG="crds"
 
-kube::codegen::gen_helpers \
-    --boilerplate "${SCRIPT_ROOT}/hack/boilerplate.go.txt" \
-    "${SCRIPT_ROOT}/pkg/apis"
+local objs=()
+  while read -r dir; do
+      pkg="$(cd "${dir}" && GO111MODULE=on go list -find .)"
+      objs+=("${pkg}")
+  done < <(
+      ( kube::codegen::internal::grep -l --null \
+          -e '^\s*//\s*+k8s:defaulter-gen=' \
+          -r "${SCRIPT_ROOT}/pkg/apis" \
+          --include '*.go' \
+          || true \
+      ) | while read -r -d $'\0' F; do dirname "${F}"; done \
+        | LC_ALL=C sort -u
+  )
 
-kube::codegen::gen_client \
-    --with-watch \
-    --output-dir "${SCRIPT_ROOT}/pkg/generated" \
-    --output-pkg "${THIS_PKG}/pkg/generated" \
-    --boilerplate "${SCRIPT_ROOT}/hack/boilerplate.go.txt" \
-    "${SCRIPT_ROOT}/pkg/apis"
+echo "${objs}"
+#kube::codegen::gen_helpers \
+#    --boilerplate "${SCRIPT_ROOT}/hack/boilerplate.go.txt" \
+#    "${SCRIPT_ROOT}/pkg/apis"
+#
+#kube::codegen::gen_client \
+#    --with-watch \
+#    --output-dir "${SCRIPT_ROOT}/pkg/generated" \
+#    --output-pkg "${THIS_PKG}/pkg/generated" \
+#    --boilerplate "${SCRIPT_ROOT}/hack/boilerplate.go.txt" \
+#    "${SCRIPT_ROOT}/pkg/apis"
