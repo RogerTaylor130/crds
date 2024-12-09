@@ -26,24 +26,24 @@ import (
 	rest "k8s.io/client-go/rest"
 )
 
-type WebappV1Interface interface {
+type CustomV1Interface interface {
 	RESTClient() rest.Interface
 	WebappsGetter
 }
 
-// WebappV1Client is used to interact with features provided by the webapp.roger.alpha.com group.
-type WebappV1Client struct {
+// CustomV1Client is used to interact with features provided by the custom.roger.alpha.com group.
+type CustomV1Client struct {
 	restClient rest.Interface
 }
 
-func (c *WebappV1Client) Webapps(namespace string) WebappInterface {
+func (c *CustomV1Client) Webapps(namespace string) WebappInterface {
 	return newWebapps(c, namespace)
 }
 
-// NewForConfig creates a new WebappV1Client for the given config.
+// NewForConfig creates a new CustomV1Client for the given config.
 // NewForConfig is equivalent to NewForConfigAndClient(c, httpClient),
 // where httpClient was generated with rest.HTTPClientFor(c).
-func NewForConfig(c *rest.Config) (*WebappV1Client, error) {
+func NewForConfig(c *rest.Config) (*CustomV1Client, error) {
 	config := *c
 	if err := setConfigDefaults(&config); err != nil {
 		return nil, err
@@ -55,9 +55,9 @@ func NewForConfig(c *rest.Config) (*WebappV1Client, error) {
 	return NewForConfigAndClient(&config, httpClient)
 }
 
-// NewForConfigAndClient creates a new WebappV1Client for the given config and http client.
+// NewForConfigAndClient creates a new CustomV1Client for the given config and http client.
 // Note the http client provided takes precedence over the configured transport values.
-func NewForConfigAndClient(c *rest.Config, h *http.Client) (*WebappV1Client, error) {
+func NewForConfigAndClient(c *rest.Config, h *http.Client) (*CustomV1Client, error) {
 	config := *c
 	if err := setConfigDefaults(&config); err != nil {
 		return nil, err
@@ -66,12 +66,12 @@ func NewForConfigAndClient(c *rest.Config, h *http.Client) (*WebappV1Client, err
 	if err != nil {
 		return nil, err
 	}
-	return &WebappV1Client{client}, nil
+	return &CustomV1Client{client}, nil
 }
 
-// NewForConfigOrDie creates a new WebappV1Client for the given config and
+// NewForConfigOrDie creates a new CustomV1Client for the given config and
 // panics if there is an error in the config.
-func NewForConfigOrDie(c *rest.Config) *WebappV1Client {
+func NewForConfigOrDie(c *rest.Config) *CustomV1Client {
 	client, err := NewForConfig(c)
 	if err != nil {
 		panic(err)
@@ -79,9 +79,9 @@ func NewForConfigOrDie(c *rest.Config) *WebappV1Client {
 	return client
 }
 
-// New creates a new WebappV1Client for the given RESTClient.
-func New(c rest.Interface) *WebappV1Client {
-	return &WebappV1Client{c}
+// New creates a new CustomV1Client for the given RESTClient.
+func New(c rest.Interface) *CustomV1Client {
+	return &CustomV1Client{c}
 }
 
 func setConfigDefaults(config *rest.Config) error {
@@ -99,7 +99,7 @@ func setConfigDefaults(config *rest.Config) error {
 
 // RESTClient returns a RESTClient that is used to communicate
 // with API server by this client implementation.
-func (c *WebappV1Client) RESTClient() rest.Interface {
+func (c *CustomV1Client) RESTClient() rest.Interface {
 	if c == nil {
 		return nil
 	}

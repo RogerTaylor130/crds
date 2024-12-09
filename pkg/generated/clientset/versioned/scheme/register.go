@@ -20,7 +20,7 @@ package scheme
 
 import (
 	examplev1alpha1 "crds/pkg/apis/mycrds/v1alpha1"
-	webappv1 "crds/pkg/apis/webapp/v1"
+	customv1 "crds/pkg/apis/webapp/v1"
 
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
@@ -34,7 +34,7 @@ var Codecs = serializer.NewCodecFactory(Scheme)
 var ParameterCodec = runtime.NewParameterCodec(Scheme)
 var localSchemeBuilder = runtime.SchemeBuilder{
 	examplev1alpha1.AddToScheme,
-	webappv1.AddToScheme,
+	customv1.AddToScheme,
 }
 
 // AddToScheme adds all types of this clientset into the given scheme. This allows composition

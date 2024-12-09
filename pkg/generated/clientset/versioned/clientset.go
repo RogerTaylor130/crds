@@ -20,7 +20,7 @@ package versioned
 
 import (
 	examplev1alpha1 "crds/pkg/generated/clientset/versioned/typed/mycrds/v1alpha1"
-	webappv1 "crds/pkg/generated/clientset/versioned/typed/webapp/v1"
+	customv1 "crds/pkg/generated/clientset/versioned/typed/webapp/v1"
 	fmt "fmt"
 	http "net/http"
 
@@ -32,14 +32,14 @@ import (
 type Interface interface {
 	Discovery() discovery.DiscoveryInterface
 	ExampleV1alpha1() examplev1alpha1.ExampleV1alpha1Interface
-	WebappV1() webappv1.WebappV1Interface
+	CustomV1() customv1.CustomV1Interface
 }
 
 // Clientset contains the clients for groups.
 type Clientset struct {
 	*discovery.DiscoveryClient
 	exampleV1alpha1 *examplev1alpha1.ExampleV1alpha1Client
-	webappV1        *webappv1.WebappV1Client
+	customV1        *customv1.CustomV1Client
 }
 
 // ExampleV1alpha1 retrieves the ExampleV1alpha1Client
@@ -47,9 +47,9 @@ func (c *Clientset) ExampleV1alpha1() examplev1alpha1.ExampleV1alpha1Interface {
 	return c.exampleV1alpha1
 }
 
-// WebappV1 retrieves the WebappV1Client
-func (c *Clientset) WebappV1() webappv1.WebappV1Interface {
-	return c.webappV1
+// CustomV1 retrieves the CustomV1Client
+func (c *Clientset) CustomV1() customv1.CustomV1Interface {
+	return c.customV1
 }
 
 // Discovery retrieves the DiscoveryClient
@@ -100,7 +100,7 @@ func NewForConfigAndClient(c *rest.Config, httpClient *http.Client) (*Clientset,
 	if err != nil {
 		return nil, err
 	}
-	cs.webappV1, err = webappv1.NewForConfigAndClient(&configShallowCopy, httpClient)
+	cs.customV1, err = customv1.NewForConfigAndClient(&configShallowCopy, httpClient)
 	if err != nil {
 		return nil, err
 	}
@@ -126,7 +126,7 @@ func NewForConfigOrDie(c *rest.Config) *Clientset {
 func New(c rest.Interface) *Clientset {
 	var cs Clientset
 	cs.exampleV1alpha1 = examplev1alpha1.New(c)
-	cs.webappV1 = webappv1.New(c)
+	cs.customV1 = customv1.New(c)
 
 	cs.DiscoveryClient = discovery.NewDiscoveryClient(c)
 	return &cs

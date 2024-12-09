@@ -28,10 +28,10 @@ import (
 // fakeWebapps implements WebappInterface
 type fakeWebapps struct {
 	*gentype.FakeClientWithList[*v1.Webapp, *v1.WebappList]
-	Fake *FakeWebappV1
+	Fake *FakeCustomV1
 }
 
-func newFakeWebapps(fake *FakeWebappV1, namespace string) webappv1.WebappInterface {
+func newFakeWebapps(fake *FakeCustomV1, namespace string) webappv1.WebappInterface {
 	return &fakeWebapps{
 		gentype.NewFakeClientWithList[*v1.Webapp, *v1.WebappList](
 			fake.Fake,

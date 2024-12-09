@@ -56,7 +56,7 @@ type webapps struct {
 }
 
 // newWebapps returns a Webapps
-func newWebapps(c *WebappV1Client, namespace string) *webapps {
+func newWebapps(c *CustomV1Client, namespace string) *webapps {
 	return &webapps{
 		gentype.NewClientWithList[*webappv1.Webapp, *webappv1.WebappList](
 			"webapps",
