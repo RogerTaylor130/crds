@@ -20,7 +20,7 @@ package versioned
 
 import (
 	rogerv1alpha1 "crds/pkg/generated/clientset/versioned/typed/mycrds/v1alpha1"
-	rogerv1alpha1 "crds/pkg/generated/clientset/versioned/typed/webapp/v1alpha1"
+	_ "crds/pkg/generated/clientset/versioned/typed/webapp/v1alpha1"
 	fmt "fmt"
 	http "net/http"
 
