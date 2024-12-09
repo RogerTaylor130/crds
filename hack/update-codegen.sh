@@ -38,17 +38,18 @@ source "${CODEGEN_PKG}/kube_codegen.sh"
 THIS_PKG_PRE="crds"
 
 while read -r dir; do
-    pkg="$(echo ${dir} | awk -F '/' '{print $(NF-1)"/"$NF}' )"
+    obj_and_version="$(echo ${dir} | awk -F '/' '{print $(NF-1)"/"$NF}' )"
+    obj="$(echo ${dir} | awk -F '/' '{print $(NF-1)"/"$NF}' )"
     kube::codegen::gen_helpers \
         --boilerplate "${SCRIPT_ROOT}/hack/boilerplate.go.txt" \
-        "${SCRIPT_ROOT}/pkg/apis"
+        "${SCRIPT_ROOT}/pkg/apis/${obj}"
 
     kube::codegen::gen_client \
         --with-watch \
         --output-dir "${SCRIPT_ROOT}/pkg/generated" \
-        --output-pkg "${THIS_PKG_PRE}/${pkg}/pkg/generated" \
+        --output-pkg "${THIS_PKG_PRE}/${obj_and_version}/pkg/generated" \
         --boilerplate "${SCRIPT_ROOT}/hack/boilerplate.go.txt" \
-        "${SCRIPT_ROOT}/pkg/apis"
+        "${SCRIPT_ROOT}/pkg/apis/${obj}"
 done < <(
     ( kube::codegen::internal::grep -l --null \
         -e '^\s*//\s*+k8s:deepcopy-gen=' \
