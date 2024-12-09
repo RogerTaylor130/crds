@@ -37,19 +37,19 @@ source "${CODEGEN_PKG}/kube_codegen.sh"
 
 THIS_PKG_PRE="crds"
 
-local objs=()
-  while read -r dir; do
-      pkg="$(echo ${dir} | awk -F '/' '{print $(NF-1)"/"$NF}' )"
-      objs+=("${pkg}")
-  done < <(
-      ( kube::codegen::internal::grep -l --null \
-          -e '^\s*//\s*+k8s:defaulter-gen=' \
-          -r "${SCRIPT_ROOT}/pkg/apis" \
-          --include '*.go' \
-          || true \
-      ) | while read -r -d $'\0' F; do dirname "${F}"; done \
-        | LC_ALL=C sort -u
-  )
+objs=()
+while read -r dir; do
+    pkg="$(echo ${dir} | awk -F '/' '{print $(NF-1)"/"$NF}' )"
+    objs+=("${pkg}")
+done < <(
+    ( kube::codegen::internal::grep -l --null \
+        -e '^\s*//\s*+k8s:defaulter-gen=' \
+        -r "${SCRIPT_ROOT}/pkg/apis" \
+        --include '*.go' \
+        || true \
+    ) | while read -r -d $'\0' F; do dirname "${F}"; done \
+      | LC_ALL=C sort -u
+)
 
 echo "${objs}"
 
