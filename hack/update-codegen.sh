@@ -37,7 +37,6 @@ source "${CODEGEN_PKG}/kube_codegen.sh"
 
 THIS_PKG_PRE="crds"
 
-objs=()
 while read -r dir; do
     pkg="$(echo ${dir} | awk -F '/' '{print $(NF-1)"/"$NF}' )"
     kube::codegen::gen_helpers \
@@ -60,6 +59,5 @@ done < <(
       | LC_ALL=C sort -u
 )
 
-echo "${objs[@]:-No objects found}"
 
 
