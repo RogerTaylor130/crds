@@ -20,8 +20,10 @@ package fake
 
 import (
 	clientset "crds/pkg/generated/clientset/versioned"
-	rogerv1alpha1 "crds/pkg/generated/clientset/versioned/typed/mycrds/v1alpha1"
-	fakerogerv1alpha1 "crds/pkg/generated/clientset/versioned/typed/mycrds/v1alpha1/fake"
+	examplev1alpha1 "crds/pkg/generated/clientset/versioned/typed/mycrds/v1alpha1"
+	fakeexamplev1alpha1 "crds/pkg/generated/clientset/versioned/typed/mycrds/v1alpha1/fake"
+	webappv1 "crds/pkg/generated/clientset/versioned/typed/webapp/v1"
+	fakewebappv1 "crds/pkg/generated/clientset/versioned/typed/webapp/v1/fake"
 
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/watch"
@@ -84,7 +86,12 @@ var (
 	_ testing.FakeClient  = &Clientset{}
 )
 
-// RogerV1alpha1 retrieves the RogerV1alpha1Client
-func (c *Clientset) RogerV1alpha1() rogerv1alpha1.RogerV1alpha1Interface {
-	return &fakerogerv1alpha1.FakeRogerV1alpha1{Fake: &c.Fake}
+// ExampleV1alpha1 retrieves the ExampleV1alpha1Client
+func (c *Clientset) ExampleV1alpha1() examplev1alpha1.ExampleV1alpha1Interface {
+	return &fakeexamplev1alpha1.FakeExampleV1alpha1{Fake: &c.Fake}
+}
+
+// WebappV1 retrieves the WebappV1Client
+func (c *Clientset) WebappV1() webappv1.WebappV1Interface {
+	return &fakewebappv1.FakeWebappV1{Fake: &c.Fake}
 }

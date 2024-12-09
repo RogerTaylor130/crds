@@ -19,9 +19,10 @@ limitations under the License.
 package versioned
 
 import (
-	rogerv1alpha1 "crds/pkg/generated/clientset/versioned/typed/mycrds/v1alpha1"
-	"fmt"
-	"net/http"
+	examplev1alpha1 "crds/pkg/generated/clientset/versioned/typed/mycrds/v1alpha1"
+	webappv1 "crds/pkg/generated/clientset/versioned/typed/webapp/v1"
+	fmt "fmt"
+	http "net/http"
 
 	discovery "k8s.io/client-go/discovery"
 	rest "k8s.io/client-go/rest"
@@ -30,18 +31,25 @@ import (
 
 type Interface interface {
 	Discovery() discovery.DiscoveryInterface
-	RogerV1alpha1() rogerv1alpha1.RogerV1alpha1Interface
+	ExampleV1alpha1() examplev1alpha1.ExampleV1alpha1Interface
+	WebappV1() webappv1.WebappV1Interface
 }
 
 // Clientset contains the clients for groups.
 type Clientset struct {
 	*discovery.DiscoveryClient
-	rogerV1alpha1 *rogerv1alpha1.RogerV1alpha1Client
+	exampleV1alpha1 *examplev1alpha1.ExampleV1alpha1Client
+	webappV1        *webappv1.WebappV1Client
 }
 
-// RogerV1alpha1 retrieves the RogerV1alpha1Client
-func (c *Clientset) RogerV1alpha1() rogerv1alpha1.RogerV1alpha1Interface {
-	return c.rogerV1alpha1
+// ExampleV1alpha1 retrieves the ExampleV1alpha1Client
+func (c *Clientset) ExampleV1alpha1() examplev1alpha1.ExampleV1alpha1Interface {
+	return c.exampleV1alpha1
+}
+
+// WebappV1 retrieves the WebappV1Client
+func (c *Clientset) WebappV1() webappv1.WebappV1Interface {
+	return c.webappV1
 }
 
 // Discovery retrieves the DiscoveryClient
@@ -88,7 +96,11 @@ func NewForConfigAndClient(c *rest.Config, httpClient *http.Client) (*Clientset,
 
 	var cs Clientset
 	var err error
-	cs.rogerV1alpha1, err = rogerv1alpha1.NewForConfigAndClient(&configShallowCopy, httpClient)
+	cs.exampleV1alpha1, err = examplev1alpha1.NewForConfigAndClient(&configShallowCopy, httpClient)
+	if err != nil {
+		return nil, err
+	}
+	cs.webappV1, err = webappv1.NewForConfigAndClient(&configShallowCopy, httpClient)
 	if err != nil {
 		return nil, err
 	}
@@ -113,7 +125,8 @@ func NewForConfigOrDie(c *rest.Config) *Clientset {
 // New creates a new Clientset for the given RESTClient.
 func New(c rest.Interface) *Clientset {
 	var cs Clientset
-	cs.rogerV1alpha1 = rogerv1alpha1.New(c)
+	cs.exampleV1alpha1 = examplev1alpha1.New(c)
+	cs.webappV1 = webappv1.New(c)
 
 	cs.DiscoveryClient = discovery.NewDiscoveryClient(c)
 	return &cs

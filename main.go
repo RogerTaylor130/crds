@@ -24,7 +24,7 @@ func main() {
 	officalFactory := kubeinformers.NewSharedInformerFactory(officalClient, time.Second*20)
 	barFactory := informers.NewSharedInformerFactory(barClient, 0)
 
-	barInformer := barFactory.Roger().V1alpha1().Bars()
+	barInformer := barFactory.Example().V1alpha1().Bars()
 	deploymentInformer := officalFactory.Apps().V1().Deployments()
 
 	controller := bar.NewBarController(ctx, officalClient, barClient, barInformer, deploymentInformer)

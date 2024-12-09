@@ -19,11 +19,11 @@ limitations under the License.
 package v1alpha1
 
 import (
-	v1alpha1 "crds/pkg/apis/mycrds/v1alpha1"
+	mycrdsv1alpha1 "crds/pkg/apis/mycrds/v1alpha1"
 
-	"k8s.io/apimachinery/pkg/labels"
-	"k8s.io/client-go/listers"
-	"k8s.io/client-go/tools/cache"
+	labels "k8s.io/apimachinery/pkg/labels"
+	listers "k8s.io/client-go/listers"
+	cache "k8s.io/client-go/tools/cache"
 )
 
 // BarLister helps list Bars.
@@ -31,7 +31,7 @@ import (
 type BarLister interface {
 	// List lists all Bars in the indexer.
 	// Objects returned here must be treated as read-only.
-	List(selector labels.Selector) (ret []*v1alpha1.Bar, err error)
+	List(selector labels.Selector) (ret []*mycrdsv1alpha1.Bar, err error)
 	// Bars returns an object that can list and get Bars.
 	Bars(namespace string) BarNamespaceLister
 	BarListerExpansion
@@ -39,17 +39,17 @@ type BarLister interface {
 
 // barLister implements the BarLister interface.
 type barLister struct {
-	listers.ResourceIndexer[*v1alpha1.Bar]
+	listers.ResourceIndexer[*mycrdsv1alpha1.Bar]
 }
 
 // NewBarLister returns a new BarLister.
 func NewBarLister(indexer cache.Indexer) BarLister {
-	return &barLister{listers.New[*v1alpha1.Bar](indexer, v1alpha1.Resource("bar"))}
+	return &barLister{listers.New[*mycrdsv1alpha1.Bar](indexer, mycrdsv1alpha1.Resource("bar"))}
 }
 
 // Bars returns an object that can list and get Bars.
 func (s *barLister) Bars(namespace string) BarNamespaceLister {
-	return barNamespaceLister{listers.NewNamespaced[*v1alpha1.Bar](s.ResourceIndexer, namespace)}
+	return barNamespaceLister{listers.NewNamespaced[*mycrdsv1alpha1.Bar](s.ResourceIndexer, namespace)}
 }
 
 // BarNamespaceLister helps list and get Bars.
@@ -57,15 +57,15 @@ func (s *barLister) Bars(namespace string) BarNamespaceLister {
 type BarNamespaceLister interface {
 	// List lists all Bars in the indexer for a given namespace.
 	// Objects returned here must be treated as read-only.
-	List(selector labels.Selector) (ret []*v1alpha1.Bar, err error)
+	List(selector labels.Selector) (ret []*mycrdsv1alpha1.Bar, err error)
 	// Get retrieves the Bar from the indexer for a given namespace and name.
 	// Objects returned here must be treated as read-only.
-	Get(name string) (*v1alpha1.Bar, error)
+	Get(name string) (*mycrdsv1alpha1.Bar, error)
 	BarNamespaceListerExpansion
 }
 
 // barNamespaceLister implements the BarNamespaceLister
 // interface.
 type barNamespaceLister struct {
-	listers.ResourceIndexer[*v1alpha1.Bar]
+	listers.ResourceIndexer[*mycrdsv1alpha1.Bar]
 }

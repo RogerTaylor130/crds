@@ -1,0 +1,70 @@
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    "api-approved.kubernetes.io": "unapproved, experimental-only; please get an approval from Kubernetes API reviewers if you're trying to develop a CRD in the *.k8s.io or *.kubernetes.io groups"
+  name: webapp.custom.roger.alpha.com
+spec:
+  group: custom.roger.alpha.com
+  versions:
+    - name: v1alpha1
+      served: true
+      storage: true
+      schema:
+        openAPIV3Schema:
+          type: object
+          properties:
+            spec:
+              type: object
+              properties:
+                version:
+                  type: string
+                branch:
+                  type: string
+                env:
+                  type: string
+                producerReplicas:
+                  type: integer
+                consumerReplicas:
+                  type: integer
+            status:
+              type: object
+              properties:
+                consumer:
+                  type: object
+                  properties:
+                    availableReplicas:
+                      type: integer
+                    unavailableReplicas:
+                      type: integer
+                    replicas:
+                      type: integer
+                    observedGeneration:
+                      type: integer
+                producer:
+                  type: object
+                  properties:
+                    availableReplicas:
+                      type: integer
+                    unavailableReplicas:
+                      type: integer
+                    replicas:
+                      type: integer
+                    observedGeneration:
+                      type: integer
+                filebeat:
+                  type: object
+                  properties:
+                    availableReplicas:
+                      type: integer
+                    unavailableReplicas:
+                      type: integer
+                    replicas:
+                      type: integer
+                    observedGeneration:
+                      type: integer
+  names:
+    kind: Webapp
+    singular: webapp
+    plural: webapps
+  scope: Namespaced

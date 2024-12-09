@@ -18,5 +18,5 @@ package mycrds
 
 // GroupName is the group name used in this package
 const (
-	GroupName = "roger.alpha.example.com"
+	GroupName = "example.roger.alpha.com"
 )

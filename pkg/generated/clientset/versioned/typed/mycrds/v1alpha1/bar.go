@@ -19,8 +19,8 @@ limitations under the License.
 package v1alpha1
 
 import (
-	"context"
-	v1alpha1 "crds/pkg/apis/mycrds/v1alpha1"
+	context "context"
+	mycrdsv1alpha1 "crds/pkg/apis/mycrds/v1alpha1"
 	scheme "crds/pkg/generated/clientset/versioned/scheme"
 
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -37,33 +37,34 @@ type BarsGetter interface {
 
 // BarInterface has methods to work with Bar resources.
 type BarInterface interface {
-	Create(ctx context.Context, bar *v1alpha1.Bar, opts v1.CreateOptions) (*v1alpha1.Bar, error)
-	Update(ctx context.Context, bar *v1alpha1.Bar, opts v1.UpdateOptions) (*v1alpha1.Bar, error)
+	Create(ctx context.Context, bar *mycrdsv1alpha1.Bar, opts v1.CreateOptions) (*mycrdsv1alpha1.Bar, error)
+	Update(ctx context.Context, bar *mycrdsv1alpha1.Bar, opts v1.UpdateOptions) (*mycrdsv1alpha1.Bar, error)
 	// Add a +genclient:noStatus comment above the type to avoid generating UpdateStatus().
-	UpdateStatus(ctx context.Context, bar *v1alpha1.Bar, opts v1.UpdateOptions) (*v1alpha1.Bar, error)
+	UpdateStatus(ctx context.Context, bar *mycrdsv1alpha1.Bar, opts v1.UpdateOptions) (*mycrdsv1alpha1.Bar, error)
 	Delete(ctx context.Context, name string, opts v1.DeleteOptions) error
 	DeleteCollection(ctx context.Context, opts v1.DeleteOptions, listOpts v1.ListOptions) error
-	Get(ctx context.Context, name string, opts v1.GetOptions) (*v1alpha1.Bar, error)
-	List(ctx context.Context, opts v1.ListOptions) (*v1alpha1.BarList, error)
+	Get(ctx context.Context, name string, opts v1.GetOptions) (*mycrdsv1alpha1.Bar, error)
+	List(ctx context.Context, opts v1.ListOptions) (*mycrdsv1alpha1.BarList, error)
 	Watch(ctx context.Context, opts v1.ListOptions) (watch.Interface, error)
-	Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *v1alpha1.Bar, err error)
+	Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *mycrdsv1alpha1.Bar, err error)
 	BarExpansion
 }
 
 // bars implements BarInterface
 type bars struct {
-	*gentype.ClientWithList[*v1alpha1.Bar, *v1alpha1.BarList]
+	*gentype.ClientWithList[*mycrdsv1alpha1.Bar, *mycrdsv1alpha1.BarList]
 }
 
 // newBars returns a Bars
-func newBars(c *RogerV1alpha1Client, namespace string) *bars {
+func newBars(c *ExampleV1alpha1Client, namespace string) *bars {
 	return &bars{
-		gentype.NewClientWithList[*v1alpha1.Bar, *v1alpha1.BarList](
+		gentype.NewClientWithList[*mycrdsv1alpha1.Bar, *mycrdsv1alpha1.BarList](
 			"bars",
 			c.RESTClient(),
 			scheme.ParameterCodec,
 			namespace,
-			func() *v1alpha1.Bar { return &v1alpha1.Bar{} },
-			func() *v1alpha1.BarList { return &v1alpha1.BarList{} }),
+			func() *mycrdsv1alpha1.Bar { return &mycrdsv1alpha1.Bar{} },
+			func() *mycrdsv1alpha1.BarList { return &mycrdsv1alpha1.BarList{} },
+		),
 	}
 }
