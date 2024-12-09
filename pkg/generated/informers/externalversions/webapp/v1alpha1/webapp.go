@@ -19,11 +19,11 @@ limitations under the License.
 package v1alpha1
 
 import (
-	"context"
-	webappv1alpha1 "crds/pkg/apis/webapp/v1alpha1"
+	context "context"
+	apiswebappv1alpha1 "crds/pkg/apis/webapp/v1alpha1"
 	versioned "crds/pkg/generated/clientset/versioned"
 	internalinterfaces "crds/pkg/generated/informers/externalversions/internalinterfaces"
-	v1alpha1 "crds/pkg/generated/listers/webapp/v1alpha1"
+	webappv1alpha1 "crds/pkg/generated/listers/webapp/v1alpha1"
 	time "time"
 
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -36,7 +36,7 @@ import (
 // Webapps.
 type WebappInformer interface {
 	Informer() cache.SharedIndexInformer
-	Lister() v1alpha1.WebappLister
+	Lister() webappv1alpha1.WebappLister
 }
 
 type webappInformer struct {
@@ -62,16 +62,16 @@ func NewFilteredWebappInformer(client versioned.Interface, namespace string, res
 				if tweakListOptions != nil {
 					tweakListOptions(&options)
 				}
-				return client.WebappV1alpha1().Webapps(namespace).List(context.TODO(), options)
+				return client.RogerV1alpha1().Webapps(namespace).List(context.TODO(), options)
 			},
 			WatchFunc: func(options v1.ListOptions) (watch.Interface, error) {
 				if tweakListOptions != nil {
 					tweakListOptions(&options)
 				}
-				return client.WebappV1alpha1().Webapps(namespace).Watch(context.TODO(), options)
+				return client.RogerV1alpha1().Webapps(namespace).Watch(context.TODO(), options)
 			},
 		},
-		&webappv1alpha1.Webapp{},
+		&apiswebappv1alpha1.Webapp{},
 		resyncPeriod,
 		indexers,
 	)
@@ -82,9 +82,9 @@ func (f *webappInformer) defaultInformer(client versioned.Interface, resyncPerio
 }
 
 func (f *webappInformer) Informer() cache.SharedIndexInformer {
-	return f.factory.InformerFor(&webappv1alpha1.Webapp{}, f.defaultInformer)
+	return f.factory.InformerFor(&apiswebappv1alpha1.Webapp{}, f.defaultInformer)
 }
 
-func (f *webappInformer) Lister() v1alpha1.WebappLister {
-	return v1alpha1.NewWebappLister(f.Informer().GetIndexer())
+func (f *webappInformer) Lister() webappv1alpha1.WebappLister {
+	return webappv1alpha1.NewWebappLister(f.Informer().GetIndexer())
 }

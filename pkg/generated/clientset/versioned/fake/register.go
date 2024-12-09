@@ -19,8 +19,7 @@ limitations under the License.
 package fake
 
 import (
-	rogerv1alpha1 "crds/pkg/apis/mycrds/v1alpha1"
-	webappv1alpha1 "crds/pkg/apis/webapp/v1alpha1"
+	rogerv1alpha1 "crds/pkg/apis/webapp/v1alpha1"
 
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
@@ -34,7 +33,7 @@ var codecs = serializer.NewCodecFactory(scheme)
 
 var localSchemeBuilder = runtime.SchemeBuilder{
 	rogerv1alpha1.AddToScheme,
-	webappv1alpha1.AddToScheme,
+	rogerv1alpha1.AddToScheme,
 }
 
 // AddToScheme adds all types of this clientset into the given scheme. This allows composition

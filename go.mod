@@ -7,9 +7,12 @@ godebug default=go1.23
 godebug winsymlink=0
 
 require (
+	golang.org/x/time v0.7.0
+	k8s.io/api v0.0.0-20241206182100-8b216f34d7ed
 	k8s.io/apimachinery v0.0.0-20241206181643-8c60292e48e4
 	k8s.io/client-go v0.0.0-20241206182637-8e21410d16a5
 	k8s.io/code-generator v0.0.0-20241206184501-cc88ac21caf5
+	k8s.io/klog/v2 v2.130.1
 )
 
 require (
@@ -42,15 +45,12 @@ require (
 	golang.org/x/sys v0.26.0 // indirect
 	golang.org/x/term v0.25.0 // indirect
 	golang.org/x/text v0.19.0 // indirect
-	golang.org/x/time v0.7.0 // indirect
 	golang.org/x/tools v0.26.0 // indirect
 	google.golang.org/protobuf v1.35.1 // indirect
 	gopkg.in/evanphx/json-patch.v4 v4.12.0 // indirect
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
-	k8s.io/api v0.0.0-20241206182100-8b216f34d7ed // indirect
 	k8s.io/gengo/v2 v2.0.0-20240911193312-2b36238f13e9 // indirect
-	k8s.io/klog/v2 v2.130.1 // indirect
 	k8s.io/kube-openapi v0.0.0-20241105132330-32ad38e42d3f // indirect
 	k8s.io/utils v0.0.0-20241104100929-3ea5e8cea738 // indirect
 	sigs.k8s.io/json v0.0.0-20241010143419-9aa6b5e7a4b3 // indirect

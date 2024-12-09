@@ -20,7 +20,7 @@ package fake
 
 import (
 	v1alpha1 "crds/pkg/apis/webapp/v1alpha1"
-	webappv1alpha1 "crds/pkg/generated/clientset/versioned/typed/webapp/v1alpha1"
+	mycrdsv1alpha1 "crds/pkg/generated/clientset/versioned/typed/mycrds/v1alpha1"
 
 	gentype "k8s.io/client-go/gentype"
 )
@@ -31,7 +31,7 @@ type fakeWebapps struct {
 	Fake *FakeRogerV1alpha1
 }
 
-func newFakeWebapps(fake *FakeRogerV1alpha1, namespace string) webappv1alpha1.WebappInterface {
+func newFakeWebapps(fake *FakeRogerV1alpha1, namespace string) mycrdsv1alpha1.WebappInterface {
 	return &fakeWebapps{
 		gentype.NewFakeClientWithList[*v1alpha1.Webapp, *v1alpha1.WebappList](
 			fake.Fake,

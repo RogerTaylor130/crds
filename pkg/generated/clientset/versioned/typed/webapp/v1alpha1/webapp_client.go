@@ -19,31 +19,31 @@ limitations under the License.
 package v1alpha1
 
 import (
-	v1alpha1 "crds/pkg/apis/webapp/v1alpha1"
-	"crds/pkg/generated/clientset/versioned/scheme"
-	"net/http"
+	webappv1alpha1 "crds/pkg/apis/webapp/v1alpha1"
+	scheme "crds/pkg/generated/clientset/versioned/scheme"
+	http "net/http"
 
 	rest "k8s.io/client-go/rest"
 )
 
-type WebappV1alpha1Interface interface {
+type RogerV1alpha1Interface interface {
 	RESTClient() rest.Interface
 	WebappsGetter
 }
 
-// WebappV1alpha1Client is used to interact with features provided by the webapp group.
-type WebappV1alpha1Client struct {
+// RogerV1alpha1Client is used to interact with features provided by the roger.alpha.example.com group.
+type RogerV1alpha1Client struct {
 	restClient rest.Interface
 }
 
-func (c *WebappV1alpha1Client) Webapps(namespace string) WebappInterface {
+func (c *RogerV1alpha1Client) Webapps(namespace string) WebappInterface {
 	return newWebapps(c, namespace)
 }
 
-// NewForConfig creates a new WebappV1alpha1Client for the given config.
+// NewForConfig creates a new RogerV1alpha1Client for the given config.
 // NewForConfig is equivalent to NewForConfigAndClient(c, httpClient),
 // where httpClient was generated with rest.HTTPClientFor(c).
-func NewForConfig(c *rest.Config) (*WebappV1alpha1Client, error) {
+func NewForConfig(c *rest.Config) (*RogerV1alpha1Client, error) {
 	config := *c
 	if err := setConfigDefaults(&config); err != nil {
 		return nil, err
@@ -55,9 +55,9 @@ func NewForConfig(c *rest.Config) (*WebappV1alpha1Client, error) {
 	return NewForConfigAndClient(&config, httpClient)
 }
 
-// NewForConfigAndClient creates a new WebappV1alpha1Client for the given config and http client.
+// NewForConfigAndClient creates a new RogerV1alpha1Client for the given config and http client.
 // Note the http client provided takes precedence over the configured transport values.
-func NewForConfigAndClient(c *rest.Config, h *http.Client) (*WebappV1alpha1Client, error) {
+func NewForConfigAndClient(c *rest.Config, h *http.Client) (*RogerV1alpha1Client, error) {
 	config := *c
 	if err := setConfigDefaults(&config); err != nil {
 		return nil, err
@@ -66,12 +66,12 @@ func NewForConfigAndClient(c *rest.Config, h *http.Client) (*WebappV1alpha1Clien
 	if err != nil {
 		return nil, err
 	}
-	return &WebappV1alpha1Client{client}, nil
+	return &RogerV1alpha1Client{client}, nil
 }
 
-// NewForConfigOrDie creates a new WebappV1alpha1Client for the given config and
+// NewForConfigOrDie creates a new RogerV1alpha1Client for the given config and
 // panics if there is an error in the config.
-func NewForConfigOrDie(c *rest.Config) *WebappV1alpha1Client {
+func NewForConfigOrDie(c *rest.Config) *RogerV1alpha1Client {
 	client, err := NewForConfig(c)
 	if err != nil {
 		panic(err)
@@ -79,16 +79,16 @@ func NewForConfigOrDie(c *rest.Config) *WebappV1alpha1Client {
 	return client
 }
 
-// New creates a new WebappV1alpha1Client for the given RESTClient.
-func New(c rest.Interface) *WebappV1alpha1Client {
-	return &WebappV1alpha1Client{c}
+// New creates a new RogerV1alpha1Client for the given RESTClient.
+func New(c rest.Interface) *RogerV1alpha1Client {
+	return &RogerV1alpha1Client{c}
 }
 
 func setConfigDefaults(config *rest.Config) error {
-	gv := v1alpha1.SchemeGroupVersion
+	gv := webappv1alpha1.SchemeGroupVersion
 	config.GroupVersion = &gv
 	config.APIPath = "/apis"
-	config.NegotiatedSerializer = scheme.Codecs.WithoutConversion()
+	config.NegotiatedSerializer = rest.CodecFactoryForGeneratedClient(scheme.Scheme, scheme.Codecs).WithoutConversion()
 
 	if config.UserAgent == "" {
 		config.UserAgent = rest.DefaultKubernetesUserAgent()
@@ -99,7 +99,7 @@ func setConfigDefaults(config *rest.Config) error {
 
 // RESTClient returns a RESTClient that is used to communicate
 // with API server by this client implementation.
-func (c *WebappV1alpha1Client) RESTClient() rest.Interface {
+func (c *RogerV1alpha1Client) RESTClient() rest.Interface {
 	if c == nil {
 		return nil
 	}

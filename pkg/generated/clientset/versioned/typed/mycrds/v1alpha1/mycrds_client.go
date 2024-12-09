@@ -19,16 +19,16 @@ limitations under the License.
 package v1alpha1
 
 import (
-	v1alpha1 "crds/pkg/apis/mycrds/v1alpha1"
-	"crds/pkg/generated/clientset/versioned/scheme"
-	"net/http"
+	webappv1alpha1 "crds/pkg/apis/webapp/v1alpha1"
+	scheme "crds/pkg/generated/clientset/versioned/scheme"
+	http "net/http"
 
 	rest "k8s.io/client-go/rest"
 )
 
 type RogerV1alpha1Interface interface {
 	RESTClient() rest.Interface
-	BarsGetter
+	WebappsGetter
 }
 
 // RogerV1alpha1Client is used to interact with features provided by the roger.alpha.example.com group.
@@ -36,8 +36,8 @@ type RogerV1alpha1Client struct {
 	restClient rest.Interface
 }
 
-func (c *RogerV1alpha1Client) Bars(namespace string) BarInterface {
-	return newBars(c, namespace)
+func (c *RogerV1alpha1Client) Webapps(namespace string) WebappInterface {
+	return newWebapps(c, namespace)
 }
 
 // NewForConfig creates a new RogerV1alpha1Client for the given config.
@@ -85,10 +85,10 @@ func New(c rest.Interface) *RogerV1alpha1Client {
 }
 
 func setConfigDefaults(config *rest.Config) error {
-	gv := v1alpha1.SchemeGroupVersion
+	gv := webappv1alpha1.SchemeGroupVersion
 	config.GroupVersion = &gv
 	config.APIPath = "/apis"
-	config.NegotiatedSerializer = scheme.Codecs.WithoutConversion()
+	config.NegotiatedSerializer = rest.CodecFactoryForGeneratedClient(scheme.Scheme, scheme.Codecs).WithoutConversion()
 
 	if config.UserAgent == "" {
 		config.UserAgent = rest.DefaultKubernetesUserAgent()

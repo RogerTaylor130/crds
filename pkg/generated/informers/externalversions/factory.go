@@ -256,13 +256,13 @@ type SharedInformerFactory interface {
 	InformerFor(obj runtime.Object, newFunc internalinterfaces.NewInformerFunc) cache.SharedIndexInformer
 
 	Roger() mycrds.Interface
-	Webapp() webapp.Interface
+	Roger() webapp.Interface
 }
 
 func (f *sharedInformerFactory) Roger() mycrds.Interface {
 	return mycrds.New(f, f.namespace, f.tweakListOptions)
 }
 
-func (f *sharedInformerFactory) Webapp() webapp.Interface {
+func (f *sharedInformerFactory) Roger() webapp.Interface {
 	return webapp.New(f, f.namespace, f.tweakListOptions)
 }

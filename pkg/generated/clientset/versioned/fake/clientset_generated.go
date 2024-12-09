@@ -22,8 +22,8 @@ import (
 	clientset "crds/pkg/generated/clientset/versioned"
 	rogerv1alpha1 "crds/pkg/generated/clientset/versioned/typed/mycrds/v1alpha1"
 	fakerogerv1alpha1 "crds/pkg/generated/clientset/versioned/typed/mycrds/v1alpha1/fake"
-	webappv1alpha1 "crds/pkg/generated/clientset/versioned/typed/webapp/v1alpha1"
-	fakewebappv1alpha1 "crds/pkg/generated/clientset/versioned/typed/webapp/v1alpha1/fake"
+	rogerv1alpha1 "crds/pkg/generated/clientset/versioned/typed/webapp/v1alpha1"
+	fakerogerv1alpha1 "crds/pkg/generated/clientset/versioned/typed/webapp/v1alpha1/fake"
 
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/watch"
@@ -91,7 +91,7 @@ func (c *Clientset) RogerV1alpha1() rogerv1alpha1.RogerV1alpha1Interface {
 	return &fakerogerv1alpha1.FakeRogerV1alpha1{Fake: &c.Fake}
 }
 
-// WebappV1alpha1 retrieves the WebappV1alpha1Client
-func (c *Clientset) WebappV1alpha1() webappv1alpha1.WebappV1alpha1Interface {
-	return &fakewebappv1alpha1.FakeWebappV1alpha1{Fake: &c.Fake}
+// RogerV1alpha1 retrieves the RogerV1alpha1Client
+func (c *Clientset) RogerV1alpha1() rogerv1alpha1.RogerV1alpha1Interface {
+	return &fakerogerv1alpha1.FakeRogerV1alpha1{Fake: &c.Fake}
 }

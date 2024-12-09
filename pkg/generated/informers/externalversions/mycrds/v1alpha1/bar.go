@@ -19,11 +19,11 @@ limitations under the License.
 package v1alpha1
 
 import (
-	"context"
-	mycrdsv1alpha1 "crds/pkg/apis/mycrds/v1alpha1"
+	context "context"
+	apismycrdsv1alpha1 "crds/pkg/apis/mycrds/v1alpha1"
 	versioned "crds/pkg/generated/clientset/versioned"
 	internalinterfaces "crds/pkg/generated/informers/externalversions/internalinterfaces"
-	v1alpha1 "crds/pkg/generated/listers/mycrds/v1alpha1"
+	mycrdsv1alpha1 "crds/pkg/generated/listers/mycrds/v1alpha1"
 	time "time"
 
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -36,7 +36,7 @@ import (
 // Bars.
 type BarInformer interface {
 	Informer() cache.SharedIndexInformer
-	Lister() v1alpha1.BarLister
+	Lister() mycrdsv1alpha1.BarLister
 }
 
 type barInformer struct {
@@ -71,7 +71,7 @@ func NewFilteredBarInformer(client versioned.Interface, namespace string, resync
 				return client.RogerV1alpha1().Bars(namespace).Watch(context.TODO(), options)
 			},
 		},
-		&mycrdsv1alpha1.Bar{},
+		&apismycrdsv1alpha1.Bar{},
 		resyncPeriod,
 		indexers,
 	)
@@ -82,9 +82,9 @@ func (f *barInformer) defaultInformer(client versioned.Interface, resyncPeriod t
 }
 
 func (f *barInformer) Informer() cache.SharedIndexInformer {
-	return f.factory.InformerFor(&mycrdsv1alpha1.Bar{}, f.defaultInformer)
+	return f.factory.InformerFor(&apismycrdsv1alpha1.Bar{}, f.defaultInformer)
 }
 
-func (f *barInformer) Lister() v1alpha1.BarLister {
-	return v1alpha1.NewBarLister(f.Informer().GetIndexer())
+func (f *barInformer) Lister() mycrdsv1alpha1.BarLister {
+	return mycrdsv1alpha1.NewBarLister(f.Informer().GetIndexer())
 }
