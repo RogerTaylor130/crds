@@ -3,9 +3,9 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     "api-approved.kubernetes.io": "unapproved, experimental-only; please get an approval from Kubernetes API reviewers if you're trying to develop a CRD in the *.k8s.io or *.kubernetes.io groups"
-  name: webapp.roger.alpha.example.com
+  name: webapp.custom.roger.alpha.com
 spec:
-  group: roger.alpha.example.com
+  group: custom.roger.alpha.com
   versions:
     - name: v1alpha1
       served: true

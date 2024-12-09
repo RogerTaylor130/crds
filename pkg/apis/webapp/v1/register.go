@@ -17,13 +17,14 @@ limitations under the License.
 package v1
 
 import (
+	"crds/pkg/apis/webapp"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 )
 
 // SchemeGroupVersion is group version used to register these objects
-var SchemeGroupVersion = schema.GroupVersion{Group: "webapp.roger.alpha.com", Version: "v1"}
+var SchemeGroupVersion = schema.GroupVersion{Group: webapp.GroupName, Version: "v1"}
 
 var (
 	SchemeBuilder      runtime.SchemeBuilder
