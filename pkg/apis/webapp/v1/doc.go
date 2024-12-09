@@ -15,7 +15,7 @@ limitations under the License.
 */
 
 // +k8s:deepcopy-gen=package
-// +k8s:defaulter-gen=TypeMeta
 // +groupName=example.crd.code-generator.k8s.io
 
+// Package v1alpha1 is the v1alpha1 version of the API.
 package v1 // import "crds/pkg/apis/webapp/v1"
