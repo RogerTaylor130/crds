@@ -19,7 +19,7 @@ limitations under the License.
 package v1alpha1
 
 import (
-	webappv1alpha1 "crds/pkg/apis/webapp/v1alpha1"
+	mycrdsv1alpha1 "crds/pkg/apis/mycrds/v1alpha1"
 	scheme "crds/pkg/generated/clientset/versioned/scheme"
 	http "net/http"
 
@@ -28,7 +28,7 @@ import (
 
 type RogerV1alpha1Interface interface {
 	RESTClient() rest.Interface
-	WebappsGetter
+	BarsGetter
 }
 
 // RogerV1alpha1Client is used to interact with features provided by the roger.alpha.example.com group.
@@ -36,8 +36,8 @@ type RogerV1alpha1Client struct {
 	restClient rest.Interface
 }
 
-func (c *RogerV1alpha1Client) Webapps(namespace string) WebappInterface {
-	return newWebapps(c, namespace)
+func (c *RogerV1alpha1Client) Bars(namespace string) BarInterface {
+	return newBars(c, namespace)
 }
 
 // NewForConfig creates a new RogerV1alpha1Client for the given config.
@@ -85,7 +85,7 @@ func New(c rest.Interface) *RogerV1alpha1Client {
 }
 
 func setConfigDefaults(config *rest.Config) error {
-	gv := webappv1alpha1.SchemeGroupVersion
+	gv := mycrdsv1alpha1.SchemeGroupVersion
 	config.GroupVersion = &gv
 	config.APIPath = "/apis"
 	config.NegotiatedSerializer = rest.CodecFactoryForGeneratedClient(scheme.Scheme, scheme.Codecs).WithoutConversion()

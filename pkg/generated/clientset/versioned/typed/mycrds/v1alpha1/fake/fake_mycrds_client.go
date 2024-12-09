@@ -29,8 +29,8 @@ type FakeRogerV1alpha1 struct {
 	*testing.Fake
 }
 
-func (c *FakeRogerV1alpha1) Webapps(namespace string) v1alpha1.WebappInterface {
-	return newFakeWebapps(c, namespace)
+func (c *FakeRogerV1alpha1) Bars(namespace string) v1alpha1.BarInterface {
+	return newFakeBars(c, namespace)
 }
 
 // RESTClient returns a RESTClient that is used to communicate

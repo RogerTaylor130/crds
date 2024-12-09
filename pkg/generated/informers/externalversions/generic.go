@@ -20,6 +20,7 @@ package externalversions
 
 import (
 	v1alpha1 "crds/pkg/apis/mycrds/v1alpha1"
+	v1 "crds/pkg/apis/webapp/v1"
 	fmt "fmt"
 
 	schema "k8s.io/apimachinery/pkg/runtime/schema"
@@ -55,14 +56,10 @@ func (f *sharedInformerFactory) ForResource(resource schema.GroupVersionResource
 	// Group=roger.alpha.example.com, Version=v1alpha1
 	case v1alpha1.SchemeGroupVersion.WithResource("bars"):
 		return &genericInformer{resource: resource.GroupResource(), informer: f.Roger().V1alpha1().Bars().Informer()}, nil
-	case v1alpha1.SchemeGroupVersion.WithResource("webapps"):
-		return &genericInformer{resource: resource.GroupResource(), informer: f.Roger().V1alpha1().Webapps().Informer()}, nil
 
-		// Group=roger.alpha.example.com, Version=v1alpha1
-	case v1alpha1.SchemeGroupVersion.WithResource("bars"):
-		return &genericInformer{resource: resource.GroupResource(), informer: f.Roger().V1alpha1().Bars().Informer()}, nil
-	case v1alpha1.SchemeGroupVersion.WithResource("webapps"):
-		return &genericInformer{resource: resource.GroupResource(), informer: f.Roger().V1alpha1().Webapps().Informer()}, nil
+		// Group=roger.alpha.example.com, Version=v1
+	case v1.SchemeGroupVersion.WithResource("webapps"):
+		return &genericInformer{resource: resource.GroupResource(), informer: f.Roger().V1().Webapps().Informer()}, nil
 
 	}
 

@@ -19,7 +19,8 @@ limitations under the License.
 package scheme
 
 import (
-	rogerv1alpha1 "crds/pkg/apis/webapp/v1alpha1"
+	rogerv1alpha1 "crds/pkg/apis/mycrds/v1alpha1"
+	rogerv1 "crds/pkg/apis/webapp/v1"
 
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
@@ -33,7 +34,7 @@ var Codecs = serializer.NewCodecFactory(Scheme)
 var ParameterCodec = runtime.NewParameterCodec(Scheme)
 var localSchemeBuilder = runtime.SchemeBuilder{
 	rogerv1alpha1.AddToScheme,
-	rogerv1alpha1.AddToScheme,
+	rogerv1.AddToScheme,
 }
 
 // AddToScheme adds all types of this clientset into the given scheme. This allows composition
