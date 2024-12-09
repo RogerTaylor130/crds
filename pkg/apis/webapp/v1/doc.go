@@ -15,7 +15,7 @@ limitations under the License.
 */
 
 // +k8s:deepcopy-gen=package
-// +groupName=example.roger.alpha.com
+// +groupName=webapp.roger.alpha.com
 
 // Package v1alpha1 is the v1alpha1 version of the API.
-package v1alpha1 // import "crds/pkg/apis/mycrds/v1alpha1"
+package v1 // import "crds/pkg/apis/webapp/v1"

@@ -19,129 +19,31 @@ limitations under the License.
 package fake
 
 import (
-	"context"
 	v1alpha1 "crds/pkg/apis/mycrds/v1alpha1"
+	mycrdsv1alpha1 "crds/pkg/generated/clientset/versioned/typed/mycrds/v1alpha1"
 
-	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	labels "k8s.io/apimachinery/pkg/labels"
-	types "k8s.io/apimachinery/pkg/types"
-	watch "k8s.io/apimachinery/pkg/watch"
-	testing "k8s.io/client-go/testing"
+	gentype "k8s.io/client-go/gentype"
 )
 
-// FakeBars implements barInterface
-type FakeBars struct {
-	Fake *FakeRogerV1alpha1
-	ns   string
+// fakeBars implements BarInterface
+type fakeBars struct {
+	*gentype.FakeClientWithList[*v1alpha1.Bar, *v1alpha1.BarList]
+	Fake *FakeExampleV1alpha1
 }
 
-var barsResource = v1alpha1.SchemeGroupVersion.WithResource("bars")
-
-var barsKind = v1alpha1.SchemeGroupVersion.WithKind("Bar")
-
-// Get takes name of the bar, and returns the corresponding bar object, and an error if there is any.
-func (c *FakeBars) Get(ctx context.Context, name string, options v1.GetOptions) (result *v1alpha1.Bar, err error) {
-	emptyResult := &v1alpha1.Bar{}
-	obj, err := c.Fake.
-		Invokes(testing.NewGetActionWithOptions(barsResource, c.ns, name, options), emptyResult)
-
-	if obj == nil {
-		return emptyResult, err
+func newFakeBars(fake *FakeExampleV1alpha1, namespace string) mycrdsv1alpha1.BarInterface {
+	return &fakeBars{
+		gentype.NewFakeClientWithList[*v1alpha1.Bar, *v1alpha1.BarList](
+			fake.Fake,
+			namespace,
+			v1alpha1.SchemeGroupVersion.WithResource("bars"),
+			v1alpha1.SchemeGroupVersion.WithKind("Bar"),
+			func() *v1alpha1.Bar { return &v1alpha1.Bar{} },
+			func() *v1alpha1.BarList { return &v1alpha1.BarList{} },
+			func(dst, src *v1alpha1.BarList) { dst.ListMeta = src.ListMeta },
+			func(list *v1alpha1.BarList) []*v1alpha1.Bar { return gentype.ToPointerSlice(list.Items) },
+			func(list *v1alpha1.BarList, items []*v1alpha1.Bar) { list.Items = gentype.FromPointerSlice(items) },
+		),
+		fake,
 	}
-	return obj.(*v1alpha1.Bar), err
-}
-
-// List takes label and field selectors, and returns the list of Bars that match those selectors.
-func (c *FakeBars) List(ctx context.Context, opts v1.ListOptions) (result *v1alpha1.BarList, err error) {
-	emptyResult := &v1alpha1.BarList{}
-	obj, err := c.Fake.
-		Invokes(testing.NewListActionWithOptions(barsResource, barsKind, c.ns, opts), emptyResult)
-
-	if obj == nil {
-		return emptyResult, err
-	}
-
-	label, _, _ := testing.ExtractFromListOptions(opts)
-	if label == nil {
-		label = labels.Everything()
-	}
-	list := &v1alpha1.BarList{ListMeta: obj.(*v1alpha1.BarList).ListMeta}
-	for _, item := range obj.(*v1alpha1.BarList).Items {
-		if label.Matches(labels.Set(item.Labels)) {
-			list.Items = append(list.Items, item)
-		}
-	}
-	return list, err
-}
-
-// Watch returns a watch.Interface that watches the requested bars.
-func (c *FakeBars) Watch(ctx context.Context, opts v1.ListOptions) (watch.Interface, error) {
-	return c.Fake.
-		InvokesWatch(testing.NewWatchActionWithOptions(barsResource, c.ns, opts))
-
-}
-
-// Create takes the representation of a bar and creates it.  Returns the server's representation of the bar, and an error, if there is any.
-func (c *FakeBars) Create(ctx context.Context, bar *v1alpha1.Bar, opts v1.CreateOptions) (result *v1alpha1.Bar, err error) {
-	emptyResult := &v1alpha1.Bar{}
-	obj, err := c.Fake.
-		Invokes(testing.NewCreateActionWithOptions(barsResource, c.ns, bar, opts), emptyResult)
-
-	if obj == nil {
-		return emptyResult, err
-	}
-	return obj.(*v1alpha1.Bar), err
-}
-
-// Update takes the representation of a bar and updates it. Returns the server's representation of the bar, and an error, if there is any.
-func (c *FakeBars) Update(ctx context.Context, bar *v1alpha1.Bar, opts v1.UpdateOptions) (result *v1alpha1.Bar, err error) {
-	emptyResult := &v1alpha1.Bar{}
-	obj, err := c.Fake.
-		Invokes(testing.NewUpdateActionWithOptions(barsResource, c.ns, bar, opts), emptyResult)
-
-	if obj == nil {
-		return emptyResult, err
-	}
-	return obj.(*v1alpha1.Bar), err
-}
-
-// UpdateStatus was generated because the type contains a Status member.
-// Add a +genclient:noStatus comment above the type to avoid generating UpdateStatus().
-func (c *FakeBars) UpdateStatus(ctx context.Context, bar *v1alpha1.Bar, opts v1.UpdateOptions) (result *v1alpha1.Bar, err error) {
-	emptyResult := &v1alpha1.Bar{}
-	obj, err := c.Fake.
-		Invokes(testing.NewUpdateSubresourceActionWithOptions(barsResource, "status", c.ns, bar, opts), emptyResult)
-
-	if obj == nil {
-		return emptyResult, err
-	}
-	return obj.(*v1alpha1.Bar), err
-}
-
-// Delete takes name of the bar and deletes it. Returns an error if one occurs.
-func (c *FakeBars) Delete(ctx context.Context, name string, opts v1.DeleteOptions) error {
-	_, err := c.Fake.
-		Invokes(testing.NewDeleteActionWithOptions(barsResource, c.ns, name, opts), &v1alpha1.Bar{})
-
-	return err
-}
-
-// DeleteCollection deletes a collection of objects.
-func (c *FakeBars) DeleteCollection(ctx context.Context, opts v1.DeleteOptions, listOpts v1.ListOptions) error {
-	action := testing.NewDeleteCollectionActionWithOptions(barsResource, c.ns, opts, listOpts)
-
-	_, err := c.Fake.Invokes(action, &v1alpha1.BarList{})
-	return err
-}
-
-// Patch applies the patch and returns the patched bar.
-func (c *FakeBars) Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *v1alpha1.Bar, err error) {
-	emptyResult := &v1alpha1.Bar{}
-	obj, err := c.Fake.
-		Invokes(testing.NewPatchSubresourceActionWithOptions(barsResource, c.ns, name, pt, data, opts, subresources...), emptyResult)
-
-	if obj == nil {
-		return emptyResult, err
-	}
-	return obj.(*v1alpha1.Bar), err
 }

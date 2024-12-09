@@ -19,23 +19,23 @@ limitations under the License.
 package fake
 
 import (
-	v1alpha1 "crds/pkg/generated/clientset/versioned/typed/mycrds/v1alpha1"
+	v1 "crds/pkg/generated/clientset/versioned/typed/webapp/v1"
 
 	rest "k8s.io/client-go/rest"
 	testing "k8s.io/client-go/testing"
 )
 
-type FakeExampleV1alpha1 struct {
+type FakeWebappV1 struct {
 	*testing.Fake
 }
 
-func (c *FakeExampleV1alpha1) Bars(namespace string) v1alpha1.BarInterface {
-	return newFakeBars(c, namespace)
+func (c *FakeWebappV1) Webapps(namespace string) v1.WebappInterface {
+	return newFakeWebapps(c, namespace)
 }
 
 // RESTClient returns a RESTClient that is used to communicate
 // with API server by this client implementation.
-func (c *FakeExampleV1alpha1) RESTClient() rest.Interface {
+func (c *FakeWebappV1) RESTClient() rest.Interface {
 	var ret *rest.RESTClient
 	return ret
 }
