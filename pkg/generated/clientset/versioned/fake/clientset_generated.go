@@ -22,8 +22,8 @@ import (
 	clientset "crds/pkg/generated/clientset/versioned"
 	examplev1alpha1 "crds/pkg/generated/clientset/versioned/typed/mycrds/v1alpha1"
 	fakeexamplev1alpha1 "crds/pkg/generated/clientset/versioned/typed/mycrds/v1alpha1/fake"
-	webappv1 "crds/pkg/generated/clientset/versioned/typed/webapp/v1"
-	fakewebappv1 "crds/pkg/generated/clientset/versioned/typed/webapp/v1/fake"
+	customv1 "crds/pkg/generated/clientset/versioned/typed/webapp/v1"
+	fakecustomv1 "crds/pkg/generated/clientset/versioned/typed/webapp/v1/fake"
 
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/watch"
@@ -91,7 +91,7 @@ func (c *Clientset) ExampleV1alpha1() examplev1alpha1.ExampleV1alpha1Interface {
 	return &fakeexamplev1alpha1.FakeExampleV1alpha1{Fake: &c.Fake}
 }
 
-// WebappV1 retrieves the WebappV1Client
-func (c *Clientset) WebappV1() webappv1.WebappV1Interface {
-	return &fakewebappv1.FakeWebappV1{Fake: &c.Fake}
+// CustomV1 retrieves the CustomV1Client
+func (c *Clientset) CustomV1() customv1.CustomV1Interface {
+	return &fakecustomv1.FakeCustomV1{Fake: &c.Fake}
 }
