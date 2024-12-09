@@ -260,7 +260,7 @@ func (c BarController) handleObject(obj interface{}) {
 	var ok bool
 	logger := klog.FromContext(context.Background())
 	// TODO. I dont know what this !ok means and the logic instead
-	if object, ok = obj.(*metav1.ObjectMeta); !ok {
+	if object, ok = obj.(metav1.Object); !ok {
 		tombstone, ok := obj.(cache.DeletedFinalStateUnknown)
 		if !ok {
 			// If the object value is not too big and does not contain sensitive information then
