@@ -35,6 +35,8 @@ CODEGEN_PKG=${CODEGEN_PKG:-$(cd "${SCRIPT_ROOT}"; ls -d -1 ./vendor/k8s.io/code-
 echo $CODEGEN_PKG
 source "${CODEGEN_PKG}/kube_codegen.sh"
 
+THIS_PKG="crds"
+
 #THIS_PKG_PRE="crds"
 #
 #while read -r dir; do
