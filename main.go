@@ -1,7 +1,7 @@
 package main
 
 import (
-	"crds/controllers/bar"
+	"crds/controllers/webapp"
 	clientTools "crds/tools/client"
 	"flag"
 	"k8s.io/klog/v2"
@@ -12,5 +12,6 @@ func main() {
 	flag.Parse()
 
 	ctx := clientTools.SetupSignalHandler()
-	bar.RunBarController(ctx)
+	//bar.RunBarController(ctx)
+	webapp.RunWebappController(ctx)
 }
