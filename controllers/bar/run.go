@@ -4,16 +4,12 @@ import (
 	"context"
 	informers "crds/pkg/generated/informers/externalversions"
 	clientTools "crds/tools/client"
-	"flag"
 	kubeinformers "k8s.io/client-go/informers"
 	"k8s.io/klog/v2"
 	"time"
 )
 
 func RunBarController(ctx context.Context) {
-	klog.InitFlags(nil)
-	flag.Parse()
-
 	officalClient := clientTools.GetOfficialClientSet()
 
 	logger := klog.FromContext(ctx)
