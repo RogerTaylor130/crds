@@ -96,7 +96,17 @@ func (c Controller) runWorker(ctx context.Context) {
 // TODO processNextItem
 func (c Controller) processNextItem(ctx context.Context) bool {
 	logger := klog.FromContext(ctx)
-	logger.Info("Processing item")
+
+	// Get blocks until it can return an item to be processed. If shutdown = true,
+	// the caller should end their goroutine. You must call Done with item when you
+	// have finished processing it.
+	objRef, shutdown := c.workqueue.Get() // This will block if can not get item from work queue
+	if shutdown {
+		logger.Info("Worker shutting down")
+		return false
+	}
+	logger.Info("Processing item", "Name of ObjRef", objRef.Name)
+	defer c.workqueue.Done(objRef)
 
 	return true
 }
