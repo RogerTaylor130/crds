@@ -6,7 +6,6 @@ import (
 	clientTools "crds/tools/client"
 	kubeinformers "k8s.io/client-go/informers"
 	"k8s.io/klog/v2"
-	"time"
 )
 
 func RunWebappController(ctx context.Context) {
@@ -15,8 +14,11 @@ func RunWebappController(ctx context.Context) {
 	crdClient := clientTools.GetExampleClientSet()
 	officialClient := clientTools.GetOfficialClientSet()
 
-	officialInformerFactory := kubeinformers.NewSharedInformerFactory(officialClient, time.Second*30)
-	crdInformerFactory := crdinformers.NewSharedInformerFactory(crdClient, time.Second*30)
+	officialInformerFactory := kubeinformers.NewSharedInformerFactory(officialClient, 0)
+	crdInformerFactory := crdinformers.NewSharedInformerFactory(crdClient, 0)
+
+	//officialInformerFactory := kubeinformers.NewSharedInformerFactory(officialClient, time.Second*30)
+	//crdInformerFactory := crdinformers.NewSharedInformerFactory(crdClient, time.Second*30)
 
 	contrller := NewController(ctx, officialClient, crdClient,
 		officialInformerFactory.Apps().V1().Deployments(),
