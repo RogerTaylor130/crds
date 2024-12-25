@@ -2,12 +2,17 @@ package webapp
 
 import (
 	"context"
+	v1 "crds/pkg/apis/webapp/v1"
 	clientset "crds/pkg/generated/clientset/versioned"
 	webappv1 "crds/pkg/generated/informers/externalversions/webapp/v1"
 	"fmt"
 	"golang.org/x/time/rate"
+	appsv1 "k8s.io/api/apps/v1"
+	"k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	"k8s.io/apimachinery/pkg/util/wait"
-	appsv1 "k8s.io/client-go/informers/apps/v1"
+	infomersv1 "k8s.io/client-go/informers/apps/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/util/workqueue"
@@ -15,10 +20,31 @@ import (
 	"time"
 )
 
+const (
+	controllerAgentName = "webapps"
+	FileBeat            = "filebeat"
+	Consumer            = "consumer"
+	Producer            = "producer"
+	// SuccessSynced is used as part of the Event 'reason' when a Bar is synced
+	SuccessSynced = "Synced"
+	// ErrResourceExists is used as part of the Event 'reason' when a Bar fails
+	// to sync due to a Deployment of the same name already existing.
+	ErrResourceExists = "ErrResourceExists"
+
+	// MessageResourceExists is the message used for Events when a resource
+	// fails to sync due to a Deployment already existing
+	MessageResourceExists = "Resource %q already exists and is not managed by Bar"
+	// MessageResourceSynced is the message used for an Event fired when a Bar
+	// is synced successfully
+	MessageResourceSynced = "Bar synced successfully"
+	// FieldManager distinguishes this controller from other things writing to API objects
+	FieldManager = controllerAgentName
+)
+
 type Controller struct {
 	kubeInterface      kubernetes.Interface
 	crdInterface       clientset.Interface
-	deploymentInformer appsv1.DeploymentInformer
+	deploymentInformer infomersv1.DeploymentInformer
 	webappInformer     webappv1.WebappInformer
 	workqueue          workqueue.TypedRateLimitingInterface[cache.ObjectName]
 }
@@ -26,7 +52,7 @@ type Controller struct {
 func NewController(ctx context.Context,
 	kubeInterface kubernetes.Interface,
 	crdInterface clientset.Interface,
-	deploymentInformer appsv1.DeploymentInformer,
+	deploymentInformer infomersv1.DeploymentInformer,
 	webappInformer webappv1.WebappInformer) *Controller {
 
 	logger := klog.FromContext(ctx)
@@ -93,7 +119,6 @@ func (c Controller) runWorker(ctx context.Context) {
 	}
 }
 
-// TODO processNextItem
 func (c Controller) processNextItem(ctx context.Context) bool {
 	logger := klog.FromContext(ctx)
 
@@ -105,21 +130,148 @@ func (c Controller) processNextItem(ctx context.Context) bool {
 		logger.Info("Worker shutting down")
 		return false
 	}
-	logger.Info("Processing item", "Name of ObjRef", objRef.Name)
 	defer c.workqueue.Done(objRef)
+
+	err := c.syncHandler(ctx, objRef)
+	if err != nil {
+		logger.Error(err, "Error syncing object")
+	} else {
+		c.workqueue.Forget(objRef)
+		return true
+	}
+
+	utilruntime.HandleError(err)
+	c.workqueue.AddRateLimited(objRef)
 
 	return true
 }
 
-// TODO: handleObject
+func (c Controller) syncHandler(ctx context.Context, objectRef cache.ObjectName) error {
+	logger := klog.LoggerWithValues(klog.FromContext(ctx), "objectRef", objectRef)
+
+	webapp, err := c.webappInformer.Lister().Webapps(objectRef.Namespace).Get(objectRef.Name)
+	if err != nil {
+		if errors.IsNotFound(err) {
+			utilruntime.HandleErrorWithContext(ctx, err, "webapp referenced by item in work queue no longer exists", "objectReference", objectRef)
+			return nil
+		}
+		return err
+	}
+
+	filebeatDepName := fmt.Sprintf("webapp-%s", FileBeat)
+	consumerDepName := fmt.Sprintf("webapp-%s", Consumer)
+	producerDepName := fmt.Sprintf("webapp-%s", Producer)
+
+	logger.V(4).Info("Processing FileBeat deployment")
+	err = c.checkDeployment(ctx, webapp, filebeatDepName, FileBeat)
+	if err != nil {
+		return err
+	}
+
+	logger.V(4).Info("Processing Consumer deployment")
+	err = c.checkDeployment(ctx, webapp, consumerDepName, Consumer)
+	if err != nil {
+		return err
+	}
+
+	logger.V(4).Info("Processing Producer deployment")
+	err = c.checkDeployment(ctx, webapp, producerDepName, Producer)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (c Controller) checkDeployment(ctx context.Context, webapp *v1.Webapp, deploymentName, component string) error {
+	logger := klog.FromContext(ctx)
+	deployment, err := c.deploymentInformer.Lister().Deployments(webapp.Namespace).Get(deploymentName)
+	if errors.IsNotFound(err) {
+		logger.Info(fmt.Sprintf("Can not find the %s Deployment. Creating", deployment))
+		deployment, err = c.kubeInterface.AppsV1().Deployments(webapp.Namespace).Create(ctx, newWebComponentDeployment(ctx, webapp, component), metav1.CreateOptions{FieldManager: FieldManager})
+	}
+
+	if err != nil {
+		return err
+	}
+
+	if !metav1.IsControlledBy(deployment, webapp) {
+		msg := fmt.Sprintf(MessageResourceExists, deployment.Name)
+		return fmt.Errorf("%s", msg)
+	}
+
+	replicas := int32(1)
+	switch component {
+	case Consumer:
+		replicas = *webapp.Spec.ConsumerReplicas
+	case Producer:
+		replicas = *webapp.Spec.ProducerReplicas
+	}
+
+	if *deployment.Spec.Replicas != replicas {
+		logger.V(4).Info("Update deployment resource", "currentReplicas", *deployment.Spec.Replicas, "desiredReplicas", replicas)
+		deployment, err = c.kubeInterface.AppsV1().Deployments(webapp.Namespace).Update(ctx, newWebComponentDeployment(ctx, webapp, component), metav1.UpdateOptions{FieldManager: FieldManager})
+	}
+	if err != nil {
+		return err
+	}
+
+	return nil
+
+}
+
+// TODO: handleObject. Handle deployment events
 func (c Controller) handleObject(obj interface{}) {
 	logger := klog.FromContext(context.TODO())
 	logger.Info("Handling object")
 
 }
 
-// TODO: enqueue
 func (c Controller) enqueue(obj interface{}) {
-	logger := klog.FromContext(context.TODO())
-	logger.Info("Enqueuing object")
+	if objRef, err := cache.ObjectToName(obj); err != nil {
+		utilruntime.HandleError(err)
+	} else {
+		c.workqueue.Add(objRef)
+	}
+}
+
+func newWebComponentDeployment(ctx context.Context, webapp *v1.Webapp, component string) *appsv1.Deployment {
+	logger := klog.FromContext(ctx)
+	logger.V(4).Info("Creating deployment", "component", component, "webapp", webapp.Name)
+
+	app := fmt.Sprintf("webapp-%s", component)
+	replicas := new(int32)
+
+	switch component {
+	case Consumer:
+		replicas = webapp.Spec.ConsumerReplicas
+	case Producer:
+		replicas = webapp.Spec.ProducerReplicas
+	default:
+		*replicas = int32(1) // default is filebeat
+	}
+
+	labels := map[string]string{
+		"component":  component,
+		"app":        app,
+		"controller": webapp.Name,
+	}
+	return &appsv1.Deployment{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      app,
+			Namespace: webapp.Namespace,
+			Labels:    labels,
+			OwnerReferences: []metav1.OwnerReference{
+				*metav1.NewControllerRef(webapp, v1.SchemeGroupVersion.WithKind("Webapp")),
+			},
+		},
+		Spec: appsv1.DeploymentSpec{
+			Replicas: replicas,
+			Selector: &metav1.LabelSelector{
+				MatchLabels: labels,
+			},
+			// TODO. Template
+		},
+	}
+
 }
