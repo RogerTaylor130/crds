@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"golang.org/x/time/rate"
 	appsv1 "k8s.io/api/apps/v1"
+	coreV1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
@@ -242,11 +243,14 @@ func newWebComponentDeployment(ctx context.Context, webapp *v1.Webapp, component
 	app := fmt.Sprintf("webapp-%s", component)
 	replicas := new(int32)
 
+	image := "docker.elastic.co/beats/filebeat:8.11.3"
 	switch component {
 	case Consumer:
 		replicas = webapp.Spec.ConsumerReplicas
+		image = fmt.Sprintf("192.168.38.89:30003/webapp/%s:%s", webapp.Spec.Branch, webapp.Spec.Version)
 	case Producer:
 		replicas = webapp.Spec.ProducerReplicas
+		image = fmt.Sprintf("192.168.38.89:30003/webapp/%s:%s", webapp.Spec.Branch, webapp.Spec.Version)
 	default:
 		*replicas = int32(1) // default is filebeat
 	}
@@ -270,7 +274,17 @@ func newWebComponentDeployment(ctx context.Context, webapp *v1.Webapp, component
 			Selector: &metav1.LabelSelector{
 				MatchLabels: labels,
 			},
-			// TODO. Template
+			Template: coreV1.PodTemplateSpec{
+				Spec: coreV1.PodSpec{
+					Containers: []coreV1.Container{
+						{
+							Name:  component,
+							Image: image,
+							//ImagePullPolicy: "Never",
+						},
+					},
+				},
+			},
 		},
 	}
 
