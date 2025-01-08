@@ -223,8 +223,43 @@ func (c Controller) checkDeployment(ctx context.Context, webapp *v1.Webapp, depl
 
 // TODO: handleObject. Handle deployment events
 func (c Controller) handleObject(obj interface{}) {
+	var object metav1.Object
+	var ok bool
 	logger := klog.FromContext(context.TODO())
-	logger.Info("Handling object")
+
+	if object, ok = obj.(metav1.Object); !ok {
+		tombstone, ok := obj.(cache.DeletedFinalStateUnknown)
+		if !ok {
+			// TODO: understand it
+			// If the object value is not too big and does not contain sensitive information then
+			// it may be useful to include it.
+			utilruntime.HandleErrorWithContext(context.Background(), nil, "Error decoding object, invalid type", "type", fmt.Sprintf("%T", obj))
+			return
+		}
+		object, ok = tombstone.Obj.(metav1.Object)
+		if !ok {
+			// TODO: understand it
+			// If the object value is not too big and does not contain sensitive information then
+			// it may be useful to include it.
+			utilruntime.HandleErrorWithContext(context.Background(), nil, "Error decoding object tombstone, invalid type", "type", fmt.Sprintf("%T", tombstone.Obj))
+			return
+		}
+	}
+	logger.V(4).Info("Received deployment obj", "objName", object.GetName())
+	if ownerRef := metav1.GetControllerOf(object); ownerRef != nil {
+		if ownerRef.Kind != "Webapp" {
+			logger.V(4).Info("Skip processing deployment due to the wrong owner ref", "Deployment name", object.GetName())
+			return
+		}
+		logger.Info("Processing Deployment", "Deployment name", object.GetName())
+		webapp, err := c.webappInformer.Lister().Webapps(object.GetNamespace()).Get(ownerRef.Name)
+		if err != nil {
+			logger.V(4).Info("Ignore orphaned object", "object", klog.KObj(object), "foo", ownerRef.Name)
+			return
+		}
+		c.enqueue(webapp)
+		return
+	}
 
 }
 
