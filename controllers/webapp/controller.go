@@ -160,27 +160,27 @@ func (c Controller) syncHandler(ctx context.Context, objectRef cache.ObjectName)
 	}
 	logger.Info("Got webapp", "webapp", webapp)
 
-	//filebeatDepName := fmt.Sprintf("webapp-%s", FileBeat)
-	//consumerDepName := fmt.Sprintf("webapp-%s", Consumer)
-	//producerDepName := fmt.Sprintf("webapp-%s", Producer)
-	//
-	//logger.V(4).Info("Processing FileBeat deployment")
-	//err = c.checkDeployment(ctx, webapp, filebeatDepName, FileBeat)
-	//if err != nil {
-	//	return err
-	//}
-	//
-	//logger.V(4).Info("Processing Consumer deployment")
-	//err = c.checkDeployment(ctx, webapp, consumerDepName, Consumer)
-	//if err != nil {
-	//	return err
-	//}
-	//
-	//logger.V(4).Info("Processing Producer deployment")
-	//err = c.checkDeployment(ctx, webapp, producerDepName, Producer)
-	//if err != nil {
-	//	return err
-	//}
+	filebeatDepName := fmt.Sprintf("webapp-%s", FileBeat)
+	consumerDepName := fmt.Sprintf("webapp-%s", Consumer)
+	producerDepName := fmt.Sprintf("webapp-%s", Producer)
+
+	logger.V(4).Info("Processing FileBeat deployment")
+	err = c.checkDeployment(ctx, webapp, filebeatDepName, FileBeat)
+	if err != nil {
+		return err
+	}
+
+	logger.V(4).Info("Processing Consumer deployment")
+	err = c.checkDeployment(ctx, webapp, consumerDepName, Consumer)
+	if err != nil {
+		return err
+	}
+
+	logger.V(4).Info("Processing Producer deployment")
+	err = c.checkDeployment(ctx, webapp, producerDepName, Producer)
+	if err != nil {
+		return err
+	}
 
 	return nil
 }
