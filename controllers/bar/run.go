@@ -6,7 +6,6 @@ import (
 	clientTools "crds/tools/client"
 	kubeinformers "k8s.io/client-go/informers"
 	"k8s.io/klog/v2"
-	"time"
 )
 
 func RunBarController(ctx context.Context) {
@@ -16,7 +15,7 @@ func RunBarController(ctx context.Context) {
 
 	barClient := clientTools.GetExampleClientSet()
 
-	officalFactory := kubeinformers.NewSharedInformerFactory(officalClient, time.Second*20)
+	officalFactory := kubeinformers.NewSharedInformerFactory(officalClient, 0)
 	barFactory := informers.NewSharedInformerFactory(barClient, 0)
 
 	barInformer := barFactory.Example().V1alpha1().Bars()
