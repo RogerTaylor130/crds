@@ -150,7 +150,6 @@ func (c Controller) processNextItem(ctx context.Context) bool {
 func (c Controller) syncHandler(ctx context.Context, objectRef cache.ObjectName) error {
 	logger := klog.LoggerWithValues(klog.FromContext(ctx), "objectRef", objectRef)
 
-	// TODO: Empty Webapp spec
 	webapp, err := c.webappInformer.Lister().Webapps(objectRef.Namespace).Get(objectRef.Name)
 	if err != nil {
 		if errors.IsNotFound(err) {
