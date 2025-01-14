@@ -3,8 +3,8 @@ kind: Webapp
 metadata:
   name: web-crd-test
 spec:
-  version: "v0.680"
-  branch: "master"
-  env: "prod"
+  version: v0.680
+  branch: master
+  env: prod
   producerReplicas: 1
   consumerReplicas: 1
