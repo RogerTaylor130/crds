@@ -1,4 +1,4 @@
-apiVersion: roger.alpha.example.com/v1alpha1
+apiVersion: example.roger.alpha.com/v1alpha1
 kind: Bar
 metadata:
   name: example-bar
