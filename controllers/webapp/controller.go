@@ -150,6 +150,7 @@ func (c Controller) processNextItem(ctx context.Context) bool {
 func (c Controller) syncHandler(ctx context.Context, objectRef cache.ObjectName) error {
 	logger := klog.LoggerWithValues(klog.FromContext(ctx), "objectRef", objectRef)
 
+	// TODO: Empty Webapp spec
 	webapp, err := c.webappInformer.Lister().Webapps(objectRef.Namespace).Get(objectRef.Name)
 	if err != nil {
 		if errors.IsNotFound(err) {
@@ -158,28 +159,29 @@ func (c Controller) syncHandler(ctx context.Context, objectRef cache.ObjectName)
 		}
 		return err
 	}
+	logger.Info("Got webapp", "webapp", webapp)
 
-	filebeatDepName := fmt.Sprintf("webapp-%s", FileBeat)
-	consumerDepName := fmt.Sprintf("webapp-%s", Consumer)
-	producerDepName := fmt.Sprintf("webapp-%s", Producer)
-
-	logger.V(4).Info("Processing FileBeat deployment")
-	err = c.checkDeployment(ctx, webapp, filebeatDepName, FileBeat)
-	if err != nil {
-		return err
-	}
-
-	logger.V(4).Info("Processing Consumer deployment")
-	err = c.checkDeployment(ctx, webapp, consumerDepName, Consumer)
-	if err != nil {
-		return err
-	}
-
-	logger.V(4).Info("Processing Producer deployment")
-	err = c.checkDeployment(ctx, webapp, producerDepName, Producer)
-	if err != nil {
-		return err
-	}
+	//filebeatDepName := fmt.Sprintf("webapp-%s", FileBeat)
+	//consumerDepName := fmt.Sprintf("webapp-%s", Consumer)
+	//producerDepName := fmt.Sprintf("webapp-%s", Producer)
+	//
+	//logger.V(4).Info("Processing FileBeat deployment")
+	//err = c.checkDeployment(ctx, webapp, filebeatDepName, FileBeat)
+	//if err != nil {
+	//	return err
+	//}
+	//
+	//logger.V(4).Info("Processing Consumer deployment")
+	//err = c.checkDeployment(ctx, webapp, consumerDepName, Consumer)
+	//if err != nil {
+	//	return err
+	//}
+	//
+	//logger.V(4).Info("Processing Producer deployment")
+	//err = c.checkDeployment(ctx, webapp, producerDepName, Producer)
+	//if err != nil {
+	//	return err
+	//}
 
 	return nil
 }
@@ -188,16 +190,18 @@ func (c Controller) checkDeployment(ctx context.Context, webapp *v1.Webapp, depl
 	logger := klog.FromContext(ctx)
 	deployment, err := c.deploymentInformer.Lister().Deployments(webapp.Namespace).Get(deploymentName)
 	if errors.IsNotFound(err) {
-		logger.Info(fmt.Sprintf("Can not find the %s Deployment. Creating", deployment))
+		logger.Info(fmt.Sprintf("Can not find the %s Deployment. Creating", deploymentName))
 		deployment, err = c.kubeInterface.AppsV1().Deployments(webapp.Namespace).Create(ctx, newWebComponentDeployment(ctx, webapp, component), metav1.CreateOptions{FieldManager: FieldManager})
 	}
 
 	if err != nil {
+		logger.V(4).Info("Encounter error: Failed to create Deployment", "Error", err)
 		return err
 	}
 
 	if !metav1.IsControlledBy(deployment, webapp) {
 		msg := fmt.Sprintf(MessageResourceExists, deployment.Name)
+		logger.V(4).Info("Encounter error: Deployment is not controlled by ", "msg", msg)
 		return fmt.Errorf("%s", msg)
 	}
 
@@ -310,6 +314,9 @@ func newWebComponentDeployment(ctx context.Context, webapp *v1.Webapp, component
 				MatchLabels: labels,
 			},
 			Template: coreV1.PodTemplateSpec{
+				ObjectMeta: metav1.ObjectMeta{
+					Labels: labels,
+				},
 				Spec: coreV1.PodSpec{
 					Containers: []coreV1.Container{
 						{
