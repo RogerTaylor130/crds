@@ -274,6 +274,10 @@ func (c Controller) enqueue(obj interface{}) {
 	}
 }
 
+// TODO:
+//   - Filebeat config
+//   - Args of consumer and producer
+//   - Volumes? maybe hostPath
 func newWebComponentDeployment(ctx context.Context, webapp *v1.Webapp, component string) *appsv1.Deployment {
 	logger := klog.FromContext(ctx)
 	logger.V(4).Info("Creating deployment", "component", component, "webapp", webapp.Name)
