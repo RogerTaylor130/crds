@@ -160,9 +160,9 @@ func (c Controller) syncHandler(ctx context.Context, objectRef cache.ObjectName)
 	}
 	logger.Info("Got webapp", "webapp", webapp)
 
-	filebeatDepName := fmt.Sprintf("webapp-%s", FileBeat)
-	consumerDepName := fmt.Sprintf("webapp-%s", Consumer)
-	producerDepName := fmt.Sprintf("webapp-%s", Producer)
+	filebeatDepName := fmt.Sprintf("webapp-%s-%s", webapp.Spec.Env, FileBeat)
+	consumerDepName := fmt.Sprintf("webapp-%s-%s", webapp.Spec.Env, Consumer)
+	producerDepName := fmt.Sprintf("webapp-%s-%s", webapp.Spec.Env, Producer)
 
 	logger.V(4).Info("Processing FileBeat deployment")
 	err = c.checkDeployment(ctx, webapp, filebeatDepName, FileBeat)
@@ -282,7 +282,7 @@ func newWebComponentDeployment(ctx context.Context, webapp *v1.Webapp, component
 	logger := klog.FromContext(ctx)
 	logger.V(4).Info("Creating deployment", "component", component, "webapp", webapp.Name)
 
-	app := fmt.Sprintf("webapp-%s", component)
+	app := fmt.Sprintf("webapp-%s-%s", webapp.Spec.Env, component)
 	replicas := new(int32)
 
 	image := "docker.elastic.co/beats/filebeat:8.11.3"
@@ -301,6 +301,15 @@ func newWebComponentDeployment(ctx context.Context, webapp *v1.Webapp, component
 	hostPathType := coreV1.HostPathDirectoryOrCreate
 	volumes := []coreV1.Volume{
 		{
+			Name: "log",
+			VolumeSource: coreV1.VolumeSource{
+				HostPath: &coreV1.HostPathVolumeSource{
+					Path: "/mnt2/crds/log",
+					Type: &hostPathType,
+				},
+			},
+		},
+		{
 			Name: "filebeat-config",
 			VolumeSource: coreV1.VolumeSource{
 				ConfigMap: &coreV1.ConfigMapVolumeSource{
@@ -312,6 +321,7 @@ func newWebComponentDeployment(ctx context.Context, webapp *v1.Webapp, component
 		},
 	}
 	args := []string{""}
+	addArgs := true
 
 	// TODO: make different to Consumer and Producer. Currently they have not much difference
 	switch component {
@@ -361,6 +371,29 @@ func newWebComponentDeployment(ctx context.Context, webapp *v1.Webapp, component
 		args = append(args, elm)
 	default:
 		*replicas = int32(1) // default is filebeat
+		addArgs = false
+	}
+
+	containers := []coreV1.Container{
+		{
+			Name:         component,
+			Image:        image,
+			VolumeMounts: volumeMount,
+			Env: []coreV1.EnvVar{
+				{
+					Name: "MY_POD_NAME",
+					ValueFrom: &coreV1.EnvVarSource{
+						FieldRef: &coreV1.ObjectFieldSelector{
+							FieldPath: "metadata.name",
+						},
+					},
+				},
+			},
+			//ImagePullPolicy: "Never",
+		},
+	}
+	if addArgs {
+		containers[0].Args = args
 	}
 
 	labels := map[string]string{
@@ -387,27 +420,9 @@ func newWebComponentDeployment(ctx context.Context, webapp *v1.Webapp, component
 					Labels: labels,
 				},
 				Spec: coreV1.PodSpec{
-					Containers: []coreV1.Container{
-						{
-							Name:         component,
-							Image:        image,
-							VolumeMounts: volumeMount,
-							Args:         args,
-							Env: []coreV1.EnvVar{
-								{
-									Name: "MY_POD_NAME",
-									ValueFrom: &coreV1.EnvVarSource{
-										FieldRef: &coreV1.ObjectFieldSelector{
-											FieldPath: "metadata.name",
-										},
-									},
-								},
-							},
-							//ImagePullPolicy: "Never",
-						},
-					},
-					Volumes:  volumes,
-					NodeName: "k8s-2",
+					Containers: containers,
+					Volumes:    volumes,
+					NodeName:   "k8s-2",
 				},
 			},
 		},
