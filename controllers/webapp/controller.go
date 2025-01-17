@@ -274,7 +274,7 @@ func (c Controller) enqueue(obj interface{}) {
 	}
 }
 
-// TODO:
+// TODO: 277
 //   - Filebeat config
 //   - Args of consumer and producer
 //   - Volumes? maybe hostPath
@@ -286,13 +286,79 @@ func newWebComponentDeployment(ctx context.Context, webapp *v1.Webapp, component
 	replicas := new(int32)
 
 	image := "docker.elastic.co/beats/filebeat:8.11.3"
+	volumeMount := []coreV1.VolumeMount{
+		{
+			Name:      "log",
+			MountPath: "/home/web/webapp/logs",
+		},
+		{
+			Name:      "filebeat-config",
+			MountPath: "/usr/share/filebeat/filebeat.yml",
+			SubPath:   "filebeat.yml",
+		},
+	}
+
+	hostPathType := coreV1.HostPathDirectoryOrCreate
+	volumes := []coreV1.Volume{
+		{
+			Name: "filebeat-config",
+			VolumeSource: coreV1.VolumeSource{
+				ConfigMap: &coreV1.ConfigMapVolumeSource{
+					LocalObjectReference: coreV1.LocalObjectReference{
+						Name: "webapp-filebeat-yaml-config",
+					},
+				},
+			},
+		},
+	}
+	args := []string{""}
+
+	// TODO: make different to Consumer and Producer. Currently they have not much difference
 	switch component {
 	case Consumer:
 		replicas = webapp.Spec.ConsumerReplicas
 		image = fmt.Sprintf("192.168.38.89:30003/webapp/%s:%s", webapp.Spec.Branch, webapp.Spec.Version)
+		volumeMount = []coreV1.VolumeMount{
+			{
+				Name:      "log",
+				MountPath: "/home/web/webapp/logs",
+			},
+		}
+		volumes = []coreV1.Volume{
+			{
+				Name: "log",
+				VolumeSource: coreV1.VolumeSource{
+					HostPath: &coreV1.HostPathVolumeSource{
+						Path: "/mnt2/crds/log",
+						Type: &hostPathType,
+					},
+				},
+			},
+		}
+		elm := fmt.Sprintf("--spring.profiles.active=%s,%s", webapp.Spec.Env, component)
+		args = append(args, elm)
 	case Producer:
 		replicas = webapp.Spec.ProducerReplicas
 		image = fmt.Sprintf("192.168.38.89:30003/webapp/%s:%s", webapp.Spec.Branch, webapp.Spec.Version)
+		volumeMount = []coreV1.VolumeMount{
+			{
+				Name:      "log",
+				MountPath: "/home/web/webapp/logs",
+			},
+		}
+		volumes = []coreV1.Volume{
+			{
+				Name: "log",
+				VolumeSource: coreV1.VolumeSource{
+					HostPath: &coreV1.HostPathVolumeSource{
+						Path: "/mnt2/crds/log",
+						Type: &hostPathType,
+					},
+				},
+			},
+		}
+		elm := fmt.Sprintf("--spring.profiles.active=%s,%s", webapp.Spec.Env, component)
+		args = append(args, elm)
 	default:
 		*replicas = int32(1) // default is filebeat
 	}
@@ -323,11 +389,25 @@ func newWebComponentDeployment(ctx context.Context, webapp *v1.Webapp, component
 				Spec: coreV1.PodSpec{
 					Containers: []coreV1.Container{
 						{
-							Name:  component,
-							Image: image,
+							Name:         component,
+							Image:        image,
+							VolumeMounts: volumeMount,
+							Args:         args,
+							Env: []coreV1.EnvVar{
+								{
+									Name: "MY_POD_NAME",
+									ValueFrom: &coreV1.EnvVarSource{
+										FieldRef: &coreV1.ObjectFieldSelector{
+											FieldPath: "metadata.name",
+										},
+									},
+								},
+							},
 							//ImagePullPolicy: "Never",
 						},
 					},
+					Volumes:  volumes,
+					NodeName: "k8s-2",
 				},
 			},
 		},
