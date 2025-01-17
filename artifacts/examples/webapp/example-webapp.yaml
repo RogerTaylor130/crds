@@ -5,6 +5,6 @@ metadata:
 spec:
   version: v0.680
   branch: master
-  env: prod
+  env: dev
   producerReplicas: 1
   consumerReplicas: 1
