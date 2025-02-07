@@ -190,7 +190,7 @@ func (c Controller) checkDeployment(ctx context.Context, webapp *v1.Webapp, depl
 	deployment, err := c.deploymentInformer.Lister().Deployments(webapp.Namespace).Get(deploymentName)
 	if errors.IsNotFound(err) {
 		logger.Info(fmt.Sprintf("Can not find the %s Deployment. Creating", deploymentName))
-		deployment, err = c.kubeInterface.AppsV1().Deployments(webapp.Namespace).Create(ctx, newWebComponentDeployment(ctx, webapp, component), metav1.CreateOptions{FieldManager: FieldManager})
+		deployment, err = c.kubeInterface.AppsV1().Deployments(webapp.Namespace).Create(ctx, newWebComponentDeployment(ctx, webapp, component, deploymentName), metav1.CreateOptions{FieldManager: FieldManager})
 	}
 
 	if err != nil {
@@ -214,7 +214,7 @@ func (c Controller) checkDeployment(ctx context.Context, webapp *v1.Webapp, depl
 
 	if *deployment.Spec.Replicas != replicas {
 		logger.V(4).Info("Update deployment resource", "currentReplicas", *deployment.Spec.Replicas, "desiredReplicas", replicas)
-		deployment, err = c.kubeInterface.AppsV1().Deployments(webapp.Namespace).Update(ctx, newWebComponentDeployment(ctx, webapp, component), metav1.UpdateOptions{FieldManager: FieldManager})
+		deployment, err = c.kubeInterface.AppsV1().Deployments(webapp.Namespace).Update(ctx, newWebComponentDeployment(ctx, webapp, component, deploymentName), metav1.UpdateOptions{FieldManager: FieldManager})
 	}
 	if err != nil {
 		return err
@@ -278,11 +278,10 @@ func (c Controller) enqueue(obj interface{}) {
 //   - Filebeat config
 //   - Args of consumer and producer
 //   - Volumes? maybe hostPath
-func newWebComponentDeployment(ctx context.Context, webapp *v1.Webapp, component string) *appsv1.Deployment {
+func newWebComponentDeployment(ctx context.Context, webapp *v1.Webapp, component, deploymentName string) *appsv1.Deployment {
 	logger := klog.FromContext(ctx)
 	logger.V(4).Info("Creating deployment", "component", component, "webapp", webapp.Name)
 
-	app := fmt.Sprintf("webapp-%s-%s", webapp.Spec.Env, component)
 	replicas := new(int32)
 
 	image := "docker.elastic.co/beats/filebeat:8.11.3"
@@ -398,12 +397,12 @@ func newWebComponentDeployment(ctx context.Context, webapp *v1.Webapp, component
 
 	labels := map[string]string{
 		"component":  component,
-		"app":        app,
+		"app":        deploymentName,
 		"controller": webapp.Name,
 	}
 	return &appsv1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      app,
+			Name:      deploymentName,
 			Namespace: webapp.Namespace,
 			Labels:    labels,
 			OwnerReferences: []metav1.OwnerReference{
