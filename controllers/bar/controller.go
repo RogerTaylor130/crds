@@ -170,13 +170,13 @@ func (c BarController) syncHandler(ctx context.Context, objectRef cache.ObjectNa
 
 		return err
 	}
+	//logger.Info("bar--", "bar", bar)
 
 	deploymentName := bar.Spec.DeploymentName
 	if deploymentName == "" {
 		utilruntime.HandleErrorWithContext(ctx, nil, "Deployment name missing from object reference", "objectReference", objectRef)
 		return nil
 	}
-
 	deployment, err := c.deploymentInformer.Lister().Deployments(bar.Namespace).Get(deploymentName)
 	if errors.IsNotFound(err) {
 		logger.Info("Can not find the deployment, Creating it")

@@ -34,39 +34,39 @@ type Webapp struct {
 
 // WebappSpec is the spec for a Webapp resource
 type WebappSpec struct {
-	Version          string `json:"VersionName"`
-	Branch           string `json:"BranchName"`
-	Env              string `json:"EnvName"`
-	ProducerReplicas *int32 `json:"ProducerReplicas"`
-	ConsumerReplicas *int32 `json:"ConsumerReplicas"`
+	Version          string `json:"version"`
+	Branch           string `json:"branch"`
+	Env              string `json:"env"`
+	ProducerReplicas *int32 `json:"producerReplicas"`
+	ConsumerReplicas *int32 `json:"consumerReplicas"`
 }
 
 // WebappStatus is the status for a Webapp resource
 type WebappStatus struct {
-	Consumer Consumer `json:"Consumer"`
-	Producer Producer `json:"Producer"`
-	Filebeat Filebeat `json:"Filebeat"`
+	Consumer Consumer `json:"consumer"`
+	Producer Producer `json:"producer"`
+	Filebeat Filebeat `json:"filebeat"`
 }
 
 type Consumer struct {
-	Replicas            *int32 `json:"ConsumerReplicas"`
-	AvailableReplicas   *int32 `json:"AvailableReplicas"`
-	UnavailableReplicas *int32 `json:"UnavailableReplicas"`
-	ObservedGeneration  *int32 `json:"ObservedGeneration"`
+	Replicas            *int32 `json:"consumerReplicas"`
+	AvailableReplicas   *int32 `json:"consumerAvailableReplicas"`
+	UnavailableReplicas *int32 `json:"consumerUnavailableReplicas"`
+	ObservedGeneration  *int32 `json:"consumerObservedGeneration"`
 }
 
 type Producer struct {
-	Replicas            *int32 `json:"ConsumerReplicas"`
-	AvailableReplicas   *int32 `json:"AvailableReplicas"`
-	UnavailableReplicas *int32 `json:"UnavailableReplicas"`
-	ObservedGeneration  *int32 `json:"ObservedGeneration"`
+	Replicas            *int32 `json:"producerReplicas"`
+	AvailableReplicas   *int32 `json:"producerAvailableReplicas"`
+	UnavailableReplicas *int32 `json:"producerUnavailableReplicas"`
+	ObservedGeneration  *int32 `json:"producerObservedGeneration"`
 }
 
 type Filebeat struct {
-	Replicas            *int32 `json:"ConsumerReplicas"`
-	AvailableReplicas   *int32 `json:"AvailableReplicas"`
-	UnavailableReplicas *int32 `json:"UnavailableReplicas"`
-	ObservedGeneration  *int32 `json:"ObservedGeneration"`
+	Replicas            *int32 `json:"filebeatReplicas"`
+	AvailableReplicas   *int32 `json:"filebeatAvailableReplicas"`
+	UnavailableReplicas *int32 `json:"filebeatUnavailableReplicas"`
+	ObservedGeneration  *int32 `json:"filebeatObservedGeneration"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
