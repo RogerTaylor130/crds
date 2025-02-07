@@ -7,6 +7,7 @@ import (
 	webappv1 "crds/pkg/generated/informers/externalversions/webapp/v1"
 	"fmt"
 	"golang.org/x/time/rate"
+	"io/ioutil"
 	appsv1 "k8s.io/api/apps/v1"
 	coreV1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -22,10 +23,11 @@ import (
 )
 
 const (
-	controllerAgentName = "webapps"
-	FileBeat            = "filebeat"
-	Consumer            = "consumer"
-	Producer            = "producer"
+	controllerAgentName   = "webapps"
+	FileBeat              = "filebeat"
+	Consumer              = "consumer"
+	Producer              = "producer"
+	FilebeatConfigMapName = "webapp-filebeat-yaml-config"
 	// SuccessSynced is used as part of the Event 'reason' when a Bar is synced
 	SuccessSynced = "Synced"
 	// ErrResourceExists is used as part of the Event 'reason' when a Bar fails
@@ -160,6 +162,31 @@ func (c Controller) syncHandler(ctx context.Context, objectRef cache.ObjectName)
 	}
 	logger.Info("Got webapp", "webapp", webapp)
 
+	// Pre Check
+	//// Filebeat config
+	_, err = c.kubeInterface.CoreV1().ConfigMaps(webapp.Namespace).Get(ctx, FilebeatConfigMapName, metav1.GetOptions{})
+	if errors.IsNotFound(err) {
+		klog.V(4).Info("Can not find filebeat cm. Creating it.")
+		fileContent, err := ioutil.ReadFile("artifacts/examples/webapp/config/filebeat.yml")
+		if err != nil {
+			return err
+
+		}
+		cm := &coreV1.ConfigMap{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      FilebeatConfigMapName,
+				Namespace: webapp.Namespace,
+			},
+			Data: map[string]string{
+				"filebeat.yml": string(fileContent),
+			},
+		}
+		_, err = c.kubeInterface.CoreV1().ConfigMaps(webapp.Namespace).Create(ctx, cm, metav1.CreateOptions{})
+		if err != nil {
+			return err
+		}
+	}
+
 	filebeatDepName := fmt.Sprintf("webapp-%s-%s", webapp.Spec.Env, FileBeat)
 	consumerDepName := fmt.Sprintf("webapp-%s-%s", webapp.Spec.Env, Consumer)
 	producerDepName := fmt.Sprintf("webapp-%s-%s", webapp.Spec.Env, Producer)
@@ -224,7 +251,6 @@ func (c Controller) checkDeployment(ctx context.Context, webapp *v1.Webapp, depl
 
 }
 
-// TODO: handleObject. Handle deployment events
 func (c Controller) handleObject(obj interface{}) {
 	var object metav1.Object
 	var ok bool
@@ -275,9 +301,10 @@ func (c Controller) enqueue(obj interface{}) {
 }
 
 // TODO: 277
-//   - Filebeat config
-//   - Args of consumer and producer
-//   - Volumes? maybe hostPath
+//   - Filebeat config ---- Done
+//   - Args of consumer and producer ---- Done
+//   - Volumes? maybe hostPath ---- Done
+//   - make different to Consumer and Producer. Currently they have not much difference
 func newWebComponentDeployment(ctx context.Context, webapp *v1.Webapp, component, deploymentName string) *appsv1.Deployment {
 	logger := klog.FromContext(ctx)
 	logger.V(4).Info("Creating deployment", "component", component, "webapp", webapp.Name)
@@ -291,7 +318,7 @@ func newWebComponentDeployment(ctx context.Context, webapp *v1.Webapp, component
 			MountPath: "/home/web/webapp/logs",
 		},
 		{
-			Name:      "filebeat-config",
+			Name:      FilebeatConfigMapName,
 			MountPath: "/usr/share/filebeat/filebeat.yml",
 			SubPath:   "filebeat.yml",
 		},
@@ -309,11 +336,11 @@ func newWebComponentDeployment(ctx context.Context, webapp *v1.Webapp, component
 			},
 		},
 		{
-			Name: "filebeat-config",
+			Name: FilebeatConfigMapName,
 			VolumeSource: coreV1.VolumeSource{
 				ConfigMap: &coreV1.ConfigMapVolumeSource{
 					LocalObjectReference: coreV1.LocalObjectReference{
-						Name: "webapp-filebeat-yaml-config",
+						Name: FilebeatConfigMapName,
 					},
 				},
 			},
@@ -322,7 +349,6 @@ func newWebComponentDeployment(ctx context.Context, webapp *v1.Webapp, component
 	args := []string{""}
 	addArgs := true
 
-	// TODO: make different to Consumer and Producer. Currently they have not much difference
 	switch component {
 	case Consumer:
 		replicas = webapp.Spec.ConsumerReplicas
