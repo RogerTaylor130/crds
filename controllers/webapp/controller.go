@@ -44,6 +44,10 @@ const (
 	FieldManager = controllerAgentName
 )
 
+var (
+	webAppComponents = []string{FileBeat, Consumer, Producer}
+)
+
 type Controller struct {
 	kubeInterface      kubernetes.Interface
 	crdInterface       clientset.Interface
@@ -187,26 +191,13 @@ func (c Controller) syncHandler(ctx context.Context, objectRef cache.ObjectName)
 		}
 	}
 
-	filebeatDepName := fmt.Sprintf("webapp-%s-%s", webapp.Spec.Env, FileBeat)
-	consumerDepName := fmt.Sprintf("webapp-%s-%s", webapp.Spec.Env, Consumer)
-	producerDepName := fmt.Sprintf("webapp-%s-%s", webapp.Spec.Env, Producer)
-
-	logger.V(4).Info("Processing FileBeat deployment")
-	err = c.checkDeployment(ctx, webapp, filebeatDepName, FileBeat)
-	if err != nil {
-		return err
-	}
-
-	logger.V(4).Info("Processing Consumer deployment")
-	err = c.checkDeployment(ctx, webapp, consumerDepName, Consumer)
-	if err != nil {
-		return err
-	}
-
-	logger.V(4).Info("Processing Producer deployment")
-	err = c.checkDeployment(ctx, webapp, producerDepName, Producer)
-	if err != nil {
-		return err
+	for _, webAppComponent := range webAppComponents {
+		logger.V(4).Info(fmt.Sprintf("Processing %s Component", webAppComponent))
+		deploymentName := fmt.Sprintf("webapp-%s-%s", webapp.Spec.Env, webAppComponent)
+		err = c.checkDeployment(ctx, webapp, deploymentName, webAppComponent)
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil
