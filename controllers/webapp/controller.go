@@ -34,6 +34,8 @@ const (
 	LogVolume      = "logVolumeComponent"
 	FileBeatVolume = "filebeatVolumeComponent"
 
+	HostPathType = coreV1.HostPathDirectoryOrCreate
+
 	FilebeatConfigMapName = "webapp-filebeat-yaml-config"
 	// SuccessSynced is used as part of the Event 'reason' when a Bar is synced
 	SuccessSynced = "Synced"
@@ -310,7 +312,7 @@ func newWebComponentDeployment(ctx context.Context, webapp *v1.Webapp, component
 	// image, hostPathType, volumes, volumeMount, args
 
 	image := "docker.elastic.co/beats/filebeat:8.11.3"
-	hostPathType := coreV1.HostPathDirectoryOrCreate
+	//hostPathType := coreV1.HostPathDirectoryOrCreate // defined in const
 
 	var volumes []coreV1.Volume
 
@@ -322,17 +324,17 @@ func newWebComponentDeployment(ctx context.Context, webapp *v1.Webapp, component
 	switch component {
 	case Consumer:
 		image = fmt.Sprintf("192.168.38.89:30003/webapp/%s:%s", webapp.Spec.Branch, webapp.Spec.Version)
-		volumes, volumeMount = getVolumesAndVolumeMounts(hostPathType, LogVolume)
+		volumes, volumeMount = getVolumesAndVolumeMounts(HostPathType, LogVolume)
 		elm := fmt.Sprintf("--spring.profiles.active=%s,%s", webapp.Spec.Env, component)
 		args = append(args, elm)
 	case Producer:
 		image = fmt.Sprintf("192.168.38.89:30003/webapp/%s:%s", webapp.Spec.Branch, webapp.Spec.Version)
-		volumes, volumeMount = getVolumesAndVolumeMounts(hostPathType, LogVolume)
+		volumes, volumeMount = getVolumesAndVolumeMounts(HostPathType, LogVolume)
 		elm := fmt.Sprintf("--spring.profiles.active=%s,%s", webapp.Spec.Env, component)
 		args = append(args, elm)
 	default:
 		// default is filebeat
-		volumes, volumeMount = getVolumesAndVolumeMounts(hostPathType, LogVolume, FileBeatVolume)
+		volumes, volumeMount = getVolumesAndVolumeMounts(HostPathType, LogVolume, FileBeatVolume)
 	}
 
 	containers := getContainers(component, image, volumeMount, args)
