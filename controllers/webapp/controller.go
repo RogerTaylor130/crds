@@ -23,10 +23,19 @@ import (
 )
 
 const (
-	controllerAgentName   = "webapps"
-	FileBeat              = "filebeat"
-	Consumer              = "consumer"
-	Producer              = "producer"
+	controllerAgentName = "webapps"
+
+	// FileBeat Consumer Producer Are Deployment Components
+	FileBeat = "filebeat"
+	Consumer = "consumer"
+	Producer = "producer"
+
+	// LogVolume FileBeatVolume are Volumes Components
+	LogVolume      = "logVolumeComponent"
+	FileBeatVolume = "filebeatVolumeComponent"
+
+	HostPathType = coreV1.HostPathDirectoryOrCreate
+
 	FilebeatConfigMapName = "webapp-filebeat-yaml-config"
 	// SuccessSynced is used as part of the Event 'reason' when a Bar is synced
 	SuccessSynced = "Synced"
@@ -42,6 +51,43 @@ const (
 	MessageResourceSynced = "Bar synced successfully"
 	// FieldManager distinguishes this controller from other things writing to API objects
 	FieldManager = controllerAgentName
+)
+
+var (
+	webAppComponents = []string{FileBeat, Consumer, Producer}
+	hostPathType     = HostPathType
+	// Volume
+	logVolume = coreV1.Volume{
+		Name: "log",
+		VolumeSource: coreV1.VolumeSource{
+			HostPath: &coreV1.HostPathVolumeSource{
+				Path: "/mnt2/crds/log",
+				Type: &hostPathType,
+			},
+		},
+	}
+
+	filebeatVolume = coreV1.Volume{
+		Name: FilebeatConfigMapName,
+		VolumeSource: coreV1.VolumeSource{
+			ConfigMap: &coreV1.ConfigMapVolumeSource{
+				LocalObjectReference: coreV1.LocalObjectReference{
+					Name: FilebeatConfigMapName,
+				},
+			},
+		},
+	}
+
+	// VolumeMounts
+	logVolumeMounts = coreV1.VolumeMount{
+		Name:      "log",
+		MountPath: "/home/web/webapp/logs",
+	}
+	filebeatVolumeMounts = coreV1.VolumeMount{
+		Name:      FilebeatConfigMapName,
+		MountPath: "/usr/share/filebeat/filebeat.yml",
+		SubPath:   "filebeat.yml",
+	}
 )
 
 type Controller struct {
@@ -150,6 +196,7 @@ func (c Controller) processNextItem(ctx context.Context) bool {
 }
 
 func (c Controller) syncHandler(ctx context.Context, objectRef cache.ObjectName) error {
+	// objectRef usually is namespace/objectName
 	logger := klog.LoggerWithValues(klog.FromContext(ctx), "objectRef", objectRef)
 
 	webapp, err := c.webappInformer.Lister().Webapps(objectRef.Namespace).Get(objectRef.Name)
@@ -160,13 +207,14 @@ func (c Controller) syncHandler(ctx context.Context, objectRef cache.ObjectName)
 		}
 		return err
 	}
-	logger.Info("Got webapp", "webapp", webapp)
+	logger.V(4).Info("Got webapp")
+	logger.V(5).Info("Got webapp. And its details:", "webapp", webapp)
 
 	// Pre Check
 	//// Filebeat config
 	_, err = c.kubeInterface.CoreV1().ConfigMaps(webapp.Namespace).Get(ctx, FilebeatConfigMapName, metav1.GetOptions{})
 	if errors.IsNotFound(err) {
-		klog.V(4).Info("Can not find filebeat cm. Creating it.")
+		logger.V(4).Info("Can not find filebeat cm. Creating it.")
 		fileContent, err := ioutil.ReadFile("artifacts/examples/webapp/config/filebeat.yml")
 		if err != nil {
 			return err
@@ -187,37 +235,31 @@ func (c Controller) syncHandler(ctx context.Context, objectRef cache.ObjectName)
 		}
 	}
 
-	filebeatDepName := fmt.Sprintf("webapp-%s-%s", webapp.Spec.Env, FileBeat)
-	consumerDepName := fmt.Sprintf("webapp-%s-%s", webapp.Spec.Env, Consumer)
-	producerDepName := fmt.Sprintf("webapp-%s-%s", webapp.Spec.Env, Producer)
-
-	logger.V(4).Info("Processing FileBeat deployment")
-	err = c.checkDeployment(ctx, webapp, filebeatDepName, FileBeat)
-	if err != nil {
-		return err
-	}
-
-	logger.V(4).Info("Processing Consumer deployment")
-	err = c.checkDeployment(ctx, webapp, consumerDepName, Consumer)
-	if err != nil {
-		return err
-	}
-
-	logger.V(4).Info("Processing Producer deployment")
-	err = c.checkDeployment(ctx, webapp, producerDepName, Producer)
-	if err != nil {
-		return err
+	for _, webAppComponent := range webAppComponents {
+		logger.V(4).Info(fmt.Sprintf("Processing %s Component", webAppComponent))
+		deploymentName := fmt.Sprintf("webapp-%s-%s", webapp.Spec.Env, webAppComponent)
+		replicas := int32(1)
+		switch webAppComponent {
+		case Consumer:
+			replicas = *webapp.Spec.ConsumerReplicas
+		case Producer:
+			replicas = *webapp.Spec.ProducerReplicas
+		}
+		err = c.checkDeployment(ctx, webapp, deploymentName, webAppComponent, replicas)
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil
 }
 
-func (c Controller) checkDeployment(ctx context.Context, webapp *v1.Webapp, deploymentName, component string) error {
-	logger := klog.FromContext(ctx)
+func (c Controller) checkDeployment(ctx context.Context, webapp *v1.Webapp, deploymentName, webAppComponent string, replicas int32) error {
+	logger := klog.LoggerWithValues(klog.FromContext(ctx), "Component", webAppComponent)
 	deployment, err := c.deploymentInformer.Lister().Deployments(webapp.Namespace).Get(deploymentName)
 	if errors.IsNotFound(err) {
 		logger.Info(fmt.Sprintf("Can not find the %s Deployment. Creating", deploymentName))
-		deployment, err = c.kubeInterface.AppsV1().Deployments(webapp.Namespace).Create(ctx, newWebComponentDeployment(ctx, webapp, component, deploymentName), metav1.CreateOptions{FieldManager: FieldManager})
+		deployment, err = c.kubeInterface.AppsV1().Deployments(webapp.Namespace).Create(ctx, newWebComponentDeployment(ctx, webapp, webAppComponent, deploymentName, replicas), metav1.CreateOptions{FieldManager: FieldManager})
 	}
 
 	if err != nil {
@@ -231,17 +273,9 @@ func (c Controller) checkDeployment(ctx context.Context, webapp *v1.Webapp, depl
 		return fmt.Errorf("%s", msg)
 	}
 
-	replicas := int32(1)
-	switch component {
-	case Consumer:
-		replicas = *webapp.Spec.ConsumerReplicas
-	case Producer:
-		replicas = *webapp.Spec.ProducerReplicas
-	}
-
 	if *deployment.Spec.Replicas != replicas {
 		logger.V(4).Info("Update deployment resource", "currentReplicas", *deployment.Spec.Replicas, "desiredReplicas", replicas)
-		deployment, err = c.kubeInterface.AppsV1().Deployments(webapp.Namespace).Update(ctx, newWebComponentDeployment(ctx, webapp, component, deploymentName), metav1.UpdateOptions{FieldManager: FieldManager})
+		deployment, err = c.kubeInterface.AppsV1().Deployments(webapp.Namespace).Update(ctx, newWebComponentDeployment(ctx, webapp, webAppComponent, deploymentName, replicas), metav1.UpdateOptions{FieldManager: FieldManager})
 	}
 	if err != nil {
 		return err
@@ -277,18 +311,20 @@ func (c Controller) handleObject(obj interface{}) {
 	logger.V(4).Info("Received deployment obj", "objName", object.GetName())
 	if ownerRef := metav1.GetControllerOf(object); ownerRef != nil {
 		if ownerRef.Kind != "Webapp" {
-			logger.V(4).Info("Skip processing deployment due to the wrong owner ref", "Deployment name", object.GetName())
+			logger.V(4).Info("Skip processing deployment due to the wrong owner ref", "Deployment name", object.GetName(), "namespace", object.GetNamespace())
 			return
 		}
-		logger.Info("Processing Deployment", "Deployment name", object.GetName())
+		//logger.Info("Processing Deployment", "Deployment name", object.GetName())
 		webapp, err := c.webappInformer.Lister().Webapps(object.GetNamespace()).Get(ownerRef.Name)
 		if err != nil {
-			logger.V(4).Info("Ignore orphaned object", "object", klog.KObj(object), "foo", ownerRef.Name)
+			logger.V(4).Info("Ignore orphaned object", "object", klog.KObj(object), "foo", ownerRef.Name, "error", err)
 			return
 		}
 		c.enqueue(webapp)
+		logger.V(4).Info("Enqueued webapp")
 		return
 	}
+	logger.V(6).Info("Skipped processing deployment due to no owner ref", "Deployment name", object.GetName(), "namespace", object.GetNamespace())
 
 }
 
@@ -305,127 +341,46 @@ func (c Controller) enqueue(obj interface{}) {
 //   - Args of consumer and producer ---- Done
 //   - Volumes? maybe hostPath ---- Done
 //   - make different to Consumer and Producer. Currently they have not much difference
-func newWebComponentDeployment(ctx context.Context, webapp *v1.Webapp, component, deploymentName string) *appsv1.Deployment {
+func newWebComponentDeployment(ctx context.Context, webapp *v1.Webapp, component, deploymentName string, replicas int32) *appsv1.Deployment {
 	logger := klog.FromContext(ctx)
-	logger.V(4).Info("Creating deployment", "component", component, "webapp", webapp.Name)
+	logger.V(4).Info(fmt.Sprintf("Construct %s deployment for %s", component, webapp.Name))
 
-	replicas := new(int32)
+	// image, hostPathType, volumes, volumeMount, args
 
 	image := "docker.elastic.co/beats/filebeat:8.11.3"
-	volumeMount := []coreV1.VolumeMount{
-		{
-			Name:      "log",
-			MountPath: "/home/web/webapp/logs",
-		},
-		{
-			Name:      FilebeatConfigMapName,
-			MountPath: "/usr/share/filebeat/filebeat.yml",
-			SubPath:   "filebeat.yml",
-		},
-	}
+	//hostPathType := coreV1.HostPathDirectoryOrCreate // defined in const
 
-	hostPathType := coreV1.HostPathDirectoryOrCreate
-	volumes := []coreV1.Volume{
-		{
-			Name: "log",
-			VolumeSource: coreV1.VolumeSource{
-				HostPath: &coreV1.HostPathVolumeSource{
-					Path: "/mnt2/crds/log",
-					Type: &hostPathType,
-				},
-			},
-		},
-		{
-			Name: FilebeatConfigMapName,
-			VolumeSource: coreV1.VolumeSource{
-				ConfigMap: &coreV1.ConfigMapVolumeSource{
-					LocalObjectReference: coreV1.LocalObjectReference{
-						Name: FilebeatConfigMapName,
-					},
-				},
-			},
-		},
-	}
-	args := []string{""}
-	addArgs := true
+	var volumes []coreV1.Volume
+
+	var volumeMount []coreV1.VolumeMount
+	//var containers []coreV1.Container
+
+	var args []string // args == nil => true
 
 	switch component {
 	case Consumer:
-		replicas = webapp.Spec.ConsumerReplicas
 		image = fmt.Sprintf("192.168.38.89:30003/webapp/%s:%s", webapp.Spec.Branch, webapp.Spec.Version)
-		volumeMount = []coreV1.VolumeMount{
-			{
-				Name:      "log",
-				MountPath: "/home/web/webapp/logs",
-			},
-		}
-		volumes = []coreV1.Volume{
-			{
-				Name: "log",
-				VolumeSource: coreV1.VolumeSource{
-					HostPath: &coreV1.HostPathVolumeSource{
-						Path: "/mnt2/crds/log",
-						Type: &hostPathType,
-					},
-				},
-			},
-		}
+		volumes, volumeMount = getVolumesAndVolumeMounts(LogVolume)
 		elm := fmt.Sprintf("--spring.profiles.active=%s,%s", webapp.Spec.Env, component)
 		args = append(args, elm)
 	case Producer:
-		replicas = webapp.Spec.ProducerReplicas
 		image = fmt.Sprintf("192.168.38.89:30003/webapp/%s:%s", webapp.Spec.Branch, webapp.Spec.Version)
-		volumeMount = []coreV1.VolumeMount{
-			{
-				Name:      "log",
-				MountPath: "/home/web/webapp/logs",
-			},
-		}
-		volumes = []coreV1.Volume{
-			{
-				Name: "log",
-				VolumeSource: coreV1.VolumeSource{
-					HostPath: &coreV1.HostPathVolumeSource{
-						Path: "/mnt2/crds/log",
-						Type: &hostPathType,
-					},
-				},
-			},
-		}
+		volumes, volumeMount = getVolumesAndVolumeMounts(LogVolume)
 		elm := fmt.Sprintf("--spring.profiles.active=%s,%s", webapp.Spec.Env, component)
 		args = append(args, elm)
 	default:
-		*replicas = int32(1) // default is filebeat
-		addArgs = false
+		// default is filebeat
+		volumes, volumeMount = getVolumesAndVolumeMounts(LogVolume, FileBeatVolume)
 	}
 
-	containers := []coreV1.Container{
-		{
-			Name:         component,
-			Image:        image,
-			VolumeMounts: volumeMount,
-			Env: []coreV1.EnvVar{
-				{
-					Name: "MY_POD_NAME",
-					ValueFrom: &coreV1.EnvVarSource{
-						FieldRef: &coreV1.ObjectFieldSelector{
-							FieldPath: "metadata.name",
-						},
-					},
-				},
-			},
-			//ImagePullPolicy: "Never",
-		},
-	}
-	if addArgs {
-		containers[0].Args = args
-	}
+	containers := getContainers(component, image, volumeMount, args)
 
 	labels := map[string]string{
 		"component":  component,
 		"app":        deploymentName,
 		"controller": webapp.Name,
 	}
+
 	return &appsv1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      deploymentName,
@@ -436,7 +391,7 @@ func newWebComponentDeployment(ctx context.Context, webapp *v1.Webapp, component
 			},
 		},
 		Spec: appsv1.DeploymentSpec{
-			Replicas: replicas,
+			Replicas: &replicas,
 			Selector: &metav1.LabelSelector{
 				MatchLabels: labels,
 			},
@@ -453,4 +408,52 @@ func newWebComponentDeployment(ctx context.Context, webapp *v1.Webapp, component
 		},
 	}
 
+}
+
+func getVolumesAndVolumeMounts(volumesComponents ...string) ([]coreV1.Volume, []coreV1.VolumeMount) {
+	// Combine volume and volumeMounts from vars
+
+	var volumes []coreV1.Volume
+
+	var volumeMount []coreV1.VolumeMount
+
+	for _, component := range volumesComponents {
+		switch component {
+		case FileBeatVolume:
+			volumes = append(volumes, filebeatVolume)
+			volumeMount = append(volumeMount, filebeatVolumeMounts)
+		case LogVolume:
+			volumes = append(volumes, logVolume)
+			volumeMount = append(volumeMount, logVolumeMounts)
+		}
+	}
+
+	return volumes, volumeMount
+}
+
+func getContainers(component, image string, vm []coreV1.VolumeMount, args []string) []coreV1.Container {
+
+	containers := []coreV1.Container{
+		{
+			Name:         component,
+			Image:        image,
+			VolumeMounts: vm,
+			Env: []coreV1.EnvVar{
+				{
+					Name: "MY_POD_NAME",
+					ValueFrom: &coreV1.EnvVarSource{
+						FieldRef: &coreV1.ObjectFieldSelector{
+							FieldPath: "metadata.name",
+						},
+					},
+				},
+			},
+			//ImagePullPolicy: "Never",
+		},
+	}
+	if args != nil {
+		containers[0].Args = args
+	}
+
+	return containers
 }
