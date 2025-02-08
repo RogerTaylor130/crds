@@ -164,7 +164,8 @@ func (c Controller) syncHandler(ctx context.Context, objectRef cache.ObjectName)
 		}
 		return err
 	}
-	logger.V(4).Info("Got webapp", "webapp", webapp)
+	logger.V(4).Info("Got webapp", "webapp Name", webapp.Name, "Namespace", webapp.Namespace)
+	logger.V(5).Info("Got webapp", "webapp", webapp)
 
 	// Pre Check
 	//// Filebeat config
