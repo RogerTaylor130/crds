@@ -194,7 +194,14 @@ func (c Controller) syncHandler(ctx context.Context, objectRef cache.ObjectName)
 	for _, webAppComponent := range webAppComponents {
 		logger.V(4).Info(fmt.Sprintf("Processing %s Component", webAppComponent))
 		deploymentName := fmt.Sprintf("webapp-%s-%s", webapp.Spec.Env, webAppComponent)
-		err = c.checkDeployment(ctx, webapp, deploymentName, webAppComponent)
+		replicas := int32(1)
+		switch webAppComponent {
+		case Consumer:
+			replicas = *webapp.Spec.ConsumerReplicas
+		case Producer:
+			replicas = *webapp.Spec.ProducerReplicas
+		}
+		err = c.checkDeployment(ctx, webapp, deploymentName, webAppComponent, replicas)
 		if err != nil {
 			return err
 		}
@@ -203,12 +210,12 @@ func (c Controller) syncHandler(ctx context.Context, objectRef cache.ObjectName)
 	return nil
 }
 
-func (c Controller) checkDeployment(ctx context.Context, webapp *v1.Webapp, deploymentName, component string) error {
-	logger := klog.FromContext(ctx)
+func (c Controller) checkDeployment(ctx context.Context, webapp *v1.Webapp, deploymentName, webAppComponent string, replicas int32) error {
+	logger := klog.LoggerWithValues(klog.FromContext(ctx), "Component", webAppComponent)
 	deployment, err := c.deploymentInformer.Lister().Deployments(webapp.Namespace).Get(deploymentName)
 	if errors.IsNotFound(err) {
 		logger.Info(fmt.Sprintf("Can not find the %s Deployment. Creating", deploymentName))
-		deployment, err = c.kubeInterface.AppsV1().Deployments(webapp.Namespace).Create(ctx, newWebComponentDeployment(ctx, webapp, component, deploymentName), metav1.CreateOptions{FieldManager: FieldManager})
+		deployment, err = c.kubeInterface.AppsV1().Deployments(webapp.Namespace).Create(ctx, newWebComponentDeployment(ctx, webapp, webAppComponent, deploymentName), metav1.CreateOptions{FieldManager: FieldManager})
 	}
 
 	if err != nil {
@@ -222,17 +229,9 @@ func (c Controller) checkDeployment(ctx context.Context, webapp *v1.Webapp, depl
 		return fmt.Errorf("%s", msg)
 	}
 
-	replicas := int32(1)
-	switch component {
-	case Consumer:
-		replicas = *webapp.Spec.ConsumerReplicas
-	case Producer:
-		replicas = *webapp.Spec.ProducerReplicas
-	}
-
 	if *deployment.Spec.Replicas != replicas {
 		logger.V(4).Info("Update deployment resource", "currentReplicas", *deployment.Spec.Replicas, "desiredReplicas", replicas)
-		deployment, err = c.kubeInterface.AppsV1().Deployments(webapp.Namespace).Update(ctx, newWebComponentDeployment(ctx, webapp, component, deploymentName), metav1.UpdateOptions{FieldManager: FieldManager})
+		deployment, err = c.kubeInterface.AppsV1().Deployments(webapp.Namespace).Update(ctx, newWebComponentDeployment(ctx, webapp, webAppComponent, deploymentName), metav1.UpdateOptions{FieldManager: FieldManager})
 	}
 	if err != nil {
 		return err
