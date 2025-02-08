@@ -196,6 +196,7 @@ func (c Controller) processNextItem(ctx context.Context) bool {
 }
 
 func (c Controller) syncHandler(ctx context.Context, objectRef cache.ObjectName) error {
+	// objectRef usually is namespace/objectName
 	logger := klog.LoggerWithValues(klog.FromContext(ctx), "objectRef", objectRef)
 
 	webapp, err := c.webappInformer.Lister().Webapps(objectRef.Namespace).Get(objectRef.Name)
@@ -206,8 +207,8 @@ func (c Controller) syncHandler(ctx context.Context, objectRef cache.ObjectName)
 		}
 		return err
 	}
-	logger.V(4).Info("Got webapp", "webapp Name", webapp.Name, "Namespace", webapp.Namespace)
-	logger.V(5).Info("Got webapp. And its details", "webapp", webapp)
+	logger.V(4).Info("Got webapp")
+	logger.V(5).Info("Got webapp. And its details:", "webapp", webapp)
 
 	// Pre Check
 	//// Filebeat config
@@ -310,18 +311,20 @@ func (c Controller) handleObject(obj interface{}) {
 	logger.V(4).Info("Received deployment obj", "objName", object.GetName())
 	if ownerRef := metav1.GetControllerOf(object); ownerRef != nil {
 		if ownerRef.Kind != "Webapp" {
-			logger.V(4).Info("Skip processing deployment due to the wrong owner ref", "Deployment name", object.GetName())
+			logger.V(4).Info("Skip processing deployment due to the wrong owner ref", "Deployment name", object.GetName(), "namespace", object.GetNamespace())
 			return
 		}
-		logger.Info("Processing Deployment", "Deployment name", object.GetName())
+		//logger.Info("Processing Deployment", "Deployment name", object.GetName())
 		webapp, err := c.webappInformer.Lister().Webapps(object.GetNamespace()).Get(ownerRef.Name)
 		if err != nil {
-			logger.V(4).Info("Ignore orphaned object", "object", klog.KObj(object), "foo", ownerRef.Name)
+			logger.V(4).Info("Ignore orphaned object", "object", klog.KObj(object), "foo", ownerRef.Name, "error", err)
 			return
 		}
 		c.enqueue(webapp)
+		logger.V(4).Info("Enqueued webapp")
 		return
 	}
+	logger.V(6).Info("Skipped processing deployment due to no owner ref", "Deployment name", object.GetName(), "namespace", object.GetNamespace())
 
 }
 
@@ -340,7 +343,7 @@ func (c Controller) enqueue(obj interface{}) {
 //   - make different to Consumer and Producer. Currently they have not much difference
 func newWebComponentDeployment(ctx context.Context, webapp *v1.Webapp, component, deploymentName string, replicas int32) *appsv1.Deployment {
 	logger := klog.FromContext(ctx)
-	logger.V(4).Info("Creating deployment", "component", component, "webapp", webapp.Name)
+	logger.V(4).Info(fmt.Sprintf("Construct %s deployment for %s", component, webapp.Name))
 
 	// image, hostPathType, volumes, volumeMount, args
 
