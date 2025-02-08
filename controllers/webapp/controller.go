@@ -164,13 +164,13 @@ func (c Controller) syncHandler(ctx context.Context, objectRef cache.ObjectName)
 		}
 		return err
 	}
-	logger.Info("Got webapp", "webapp", webapp)
+	logger.V(4).Info("Got webapp", "webapp", webapp)
 
 	// Pre Check
 	//// Filebeat config
 	_, err = c.kubeInterface.CoreV1().ConfigMaps(webapp.Namespace).Get(ctx, FilebeatConfigMapName, metav1.GetOptions{})
 	if errors.IsNotFound(err) {
-		klog.V(4).Info("Can not find filebeat cm. Creating it.")
+		logger.V(4).Info("Can not find filebeat cm. Creating it.")
 		fileContent, err := ioutil.ReadFile("artifacts/examples/webapp/config/filebeat.yml")
 		if err != nil {
 			return err
