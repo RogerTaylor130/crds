@@ -55,6 +55,39 @@ const (
 
 var (
 	webAppComponents = []string{FileBeat, Consumer, Producer}
+	hostPathType     = HostPathType
+	// Volume
+	logVolume = coreV1.Volume{
+		Name: "log",
+		VolumeSource: coreV1.VolumeSource{
+			HostPath: &coreV1.HostPathVolumeSource{
+				Path: "/mnt2/crds/log",
+				Type: &hostPathType,
+			},
+		},
+	}
+
+	filebeatVolume = coreV1.Volume{
+		Name: FilebeatConfigMapName,
+		VolumeSource: coreV1.VolumeSource{
+			ConfigMap: &coreV1.ConfigMapVolumeSource{
+				LocalObjectReference: coreV1.LocalObjectReference{
+					Name: FilebeatConfigMapName,
+				},
+			},
+		},
+	}
+
+	// VolumeMounts
+	logVolumeMounts = coreV1.VolumeMount{
+		Name:      "log",
+		MountPath: "/home/web/webapp/logs",
+	}
+	filebeatVolumeMounts = coreV1.VolumeMount{
+		Name:      FilebeatConfigMapName,
+		MountPath: "/usr/share/filebeat/filebeat.yml",
+		SubPath:   "filebeat.yml",
+	}
 )
 
 type Controller struct {
@@ -324,17 +357,17 @@ func newWebComponentDeployment(ctx context.Context, webapp *v1.Webapp, component
 	switch component {
 	case Consumer:
 		image = fmt.Sprintf("192.168.38.89:30003/webapp/%s:%s", webapp.Spec.Branch, webapp.Spec.Version)
-		volumes, volumeMount = getVolumesAndVolumeMounts(HostPathType, LogVolume)
+		volumes, volumeMount = getVolumesAndVolumeMounts(LogVolume)
 		elm := fmt.Sprintf("--spring.profiles.active=%s,%s", webapp.Spec.Env, component)
 		args = append(args, elm)
 	case Producer:
 		image = fmt.Sprintf("192.168.38.89:30003/webapp/%s:%s", webapp.Spec.Branch, webapp.Spec.Version)
-		volumes, volumeMount = getVolumesAndVolumeMounts(HostPathType, LogVolume)
+		volumes, volumeMount = getVolumesAndVolumeMounts(LogVolume)
 		elm := fmt.Sprintf("--spring.profiles.active=%s,%s", webapp.Spec.Env, component)
 		args = append(args, elm)
 	default:
 		// default is filebeat
-		volumes, volumeMount = getVolumesAndVolumeMounts(HostPathType, LogVolume, FileBeatVolume)
+		volumes, volumeMount = getVolumesAndVolumeMounts(LogVolume, FileBeatVolume)
 	}
 
 	containers := getContainers(component, image, volumeMount, args)
@@ -374,42 +407,8 @@ func newWebComponentDeployment(ctx context.Context, webapp *v1.Webapp, component
 
 }
 
-func getVolumesAndVolumeMounts(hostPathType coreV1.HostPathType, volumesComponents ...string) ([]coreV1.Volume, []coreV1.VolumeMount) {
-
-	// Volume
-	logVolume := coreV1.Volume{
-		Name: "log",
-		VolumeSource: coreV1.VolumeSource{
-			HostPath: &coreV1.HostPathVolumeSource{
-				Path: "/mnt2/crds/log",
-				Type: &hostPathType,
-			},
-		},
-	}
-
-	filebeatVolume := coreV1.Volume{
-		Name: FilebeatConfigMapName,
-		VolumeSource: coreV1.VolumeSource{
-			ConfigMap: &coreV1.ConfigMapVolumeSource{
-				LocalObjectReference: coreV1.LocalObjectReference{
-					Name: FilebeatConfigMapName,
-				},
-			},
-		},
-	}
-
-	// VolumeMounts
-	logVolumeMounts := coreV1.VolumeMount{
-		Name:      "log",
-		MountPath: "/home/web/webapp/logs",
-	}
-	filebeatVolumeMounts := coreV1.VolumeMount{
-		Name:      FilebeatConfigMapName,
-		MountPath: "/usr/share/filebeat/filebeat.yml",
-		SubPath:   "filebeat.yml",
-	}
-
-	// Combine And Returns
+func getVolumesAndVolumeMounts(volumesComponents ...string) ([]coreV1.Volume, []coreV1.VolumeMount) {
+	// Combine volume and volumeMounts from vars
 
 	var volumes []coreV1.Volume
 
