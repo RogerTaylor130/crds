@@ -126,6 +126,9 @@ func NewController(ctx context.Context,
 	}
 
 	// event handler func
+
+	// NOTE
+	// AddEventHandler registers listener for sharedIndexInformer
 	deploymentInformer.Informer().AddEventHandler(cache.ResourceEventHandlerFuncs{
 		AddFunc: controller.handleObject,
 		UpdateFunc: func(old, new interface{}) {
@@ -139,7 +142,10 @@ func NewController(ctx context.Context,
 		UpdateFunc: func(old, new interface{}) {
 			controller.enqueue(new)
 		},
-		DeleteFunc: controller.enqueue,
+		DeleteFunc: func(obj interface{}) {
+			controller.enqueue(obj)
+			//fmt.Println(obj.(*v1.Webapp))
+		},
 	})
 
 	return controller
