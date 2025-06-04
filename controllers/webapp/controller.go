@@ -59,6 +59,10 @@ var (
 	// Volume
 	logVolume = coreV1.Volume{
 		Name: "log",
+		//// EmptyDir will cause filebeat send no data in our case since emptyDir will not store data onto /mnt2/crds/log
+		//VolumeSource: coreV1.VolumeSource{
+		//	EmptyDir: &coreV1.EmptyDirVolumeSource{},
+		//},
 		VolumeSource: coreV1.VolumeSource{
 			HostPath: &coreV1.HostPathVolumeSource{
 				Path: "/mnt2/crds/log",
@@ -122,6 +126,9 @@ func NewController(ctx context.Context,
 	}
 
 	// event handler func
+
+	// NOTE
+	// AddEventHandler registers listener for sharedIndexInformer
 	deploymentInformer.Informer().AddEventHandler(cache.ResourceEventHandlerFuncs{
 		AddFunc: controller.handleObject,
 		UpdateFunc: func(old, new interface{}) {
@@ -135,7 +142,10 @@ func NewController(ctx context.Context,
 		UpdateFunc: func(old, new interface{}) {
 			controller.enqueue(new)
 		},
-		DeleteFunc: controller.enqueue,
+		DeleteFunc: func(obj interface{}) {
+			controller.enqueue(obj)
+			//fmt.Println(obj.(*v1.Webapp))
+		},
 	})
 
 	return controller
